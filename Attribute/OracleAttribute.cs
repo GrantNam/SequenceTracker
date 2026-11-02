@@ -31,11 +31,11 @@ namespace SequenceTracker
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     internal class  OracleColumnAttribute : Attribute
     {
-        public string Target { get; set; }
+        public string ColumnName { get; set; }
 
         public OracleColumnAttribute(string columnName)
         {
-            Target = columnName;
+            ColumnName = columnName;
         }
     }
 
