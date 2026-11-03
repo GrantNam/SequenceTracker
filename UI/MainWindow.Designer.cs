@@ -28,25 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.searchBar1 = new SequenceTracker.SearchBar();
             this.displayPanel1 = new SequenceTracker.DisplayPanel();
+            this.searchBar1 = new SequenceTracker.SearchBar();
             this.SuspendLayout();
+            // 
+            // displayPanel1
+            // 
+            this.displayPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.displayPanel1.Location = new System.Drawing.Point(0, 146);
+            this.displayPanel1.Name = "displayPanel1";
+            this.displayPanel1.Size = new System.Drawing.Size(901, 475);
+            this.displayPanel1.TabIndex = 1;
             // 
             // searchBar1
             // 
             this.searchBar1.Dock = System.Windows.Forms.DockStyle.Top;
             this.searchBar1.Location = new System.Drawing.Point(0, 0);
             this.searchBar1.Name = "searchBar1";
-            this.searchBar1.Size = new System.Drawing.Size(901, 163);
+            this.searchBar1.Size = new System.Drawing.Size(901, 146);
             this.searchBar1.TabIndex = 0;
-            // 
-            // displayPanel1
-            // 
-            this.displayPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.displayPanel1.Location = new System.Drawing.Point(0, 163);
-            this.displayPanel1.Name = "displayPanel1";
-            this.displayPanel1.Size = new System.Drawing.Size(901, 458);
-            this.displayPanel1.TabIndex = 1;
             // 
             // MainWindow
             // 

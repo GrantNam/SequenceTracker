@@ -34,6 +34,7 @@ namespace SequenceTracker
         public SearchBar() 
         {
             InitializeComponent();
+            this.BackColor = AppConstants.Colors["SEARCH_BAR_BACKGROUND"];
         }
 
         private void InitializeComponent()
@@ -53,7 +54,7 @@ namespace SequenceTracker
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(18, 36);
+            this.label2.Location = new System.Drawing.Point(17, 23);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(30, 12);
             this.label2.TabIndex = 1;
@@ -62,7 +63,7 @@ namespace SequenceTracker
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(18, 70);
+            this.label3.Location = new System.Drawing.Point(17, 57);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(59, 12);
             this.label3.TabIndex = 1;
@@ -72,7 +73,7 @@ namespace SequenceTracker
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(21, 110);
+            this.label4.Location = new System.Drawing.Point(20, 97);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(56, 12);
             this.label4.TabIndex = 1;
@@ -82,7 +83,7 @@ namespace SequenceTracker
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(375, 33);
+            this.label5.Location = new System.Drawing.Point(374, 20);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(29, 12);
             this.label5.TabIndex = 1;
@@ -94,7 +95,7 @@ namespace SequenceTracker
             this.LineCheckBox.Items.AddRange(new object[] {
             "Line 1",
             "Line 2"});
-            this.LineCheckBox.Location = new System.Drawing.Point(377, 64);
+            this.LineCheckBox.Location = new System.Drawing.Point(376, 51);
             this.LineCheckBox.Name = "LineCheckBox";
             this.LineCheckBox.Size = new System.Drawing.Size(161, 36);
             this.LineCheckBox.TabIndex = 3;
@@ -106,7 +107,7 @@ namespace SequenceTracker
             "Table",
             "Chart Graph",
             "Trend Graph"});
-            this.DisplayOption.Location = new System.Drawing.Point(583, 64);
+            this.DisplayOption.Location = new System.Drawing.Point(582, 51);
             this.DisplayOption.Name = "DisplayOption";
             this.DisplayOption.Size = new System.Drawing.Size(121, 20);
             this.DisplayOption.TabIndex = 4;
@@ -114,7 +115,7 @@ namespace SequenceTracker
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(581, 33);
+            this.label1.Location = new System.Drawing.Point(580, 20);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(87, 12);
             this.label1.TabIndex = 1;
@@ -123,7 +124,7 @@ namespace SequenceTracker
             // 
             // btn_Search
             // 
-            this.btn_Search.Location = new System.Drawing.Point(759, 64);
+            this.btn_Search.Location = new System.Drawing.Point(758, 51);
             this.btn_Search.Name = "btn_Search";
             this.btn_Search.Size = new System.Drawing.Size(121, 43);
             this.btn_Search.TabIndex = 5;
@@ -133,14 +134,14 @@ namespace SequenceTracker
             // 
             // EndDate
             // 
-            this.EndDate.Location = new System.Drawing.Point(118, 104);
+            this.EndDate.Location = new System.Drawing.Point(117, 91);
             this.EndDate.Name = "EndDate";
             this.EndDate.Size = new System.Drawing.Size(200, 21);
             this.EndDate.TabIndex = 6;
             // 
             // StartDate
             // 
-            this.StartDate.Location = new System.Drawing.Point(118, 64);
+            this.StartDate.Location = new System.Drawing.Point(117, 51);
             this.StartDate.Name = "StartDate";
             this.StartDate.Size = new System.Drawing.Size(200, 21);
             this.StartDate.TabIndex = 7;
@@ -158,7 +159,7 @@ namespace SequenceTracker
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label2);
             this.Name = "SearchBar";
-            this.Size = new System.Drawing.Size(903, 163);
+            this.Size = new System.Drawing.Size(903, 136);
             this.ResumeLayout(false);
             this.PerformLayout();
 

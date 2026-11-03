@@ -12,18 +12,15 @@ namespace SequenceTracker
 {
     internal class DisplayPanel : UserControl
     {
-
-
-
         //Managers
         //--------------------------------------------------
         internal MainWindow mainWindow;
         internal DataManager dataManager;
-        private Panel panel2;
+        private TabControl mainTab;
 
         //Fields
         //--------------------------------------------------
-        Control currentSession;
+        internal int MouseHoverIndex = -1;
 
         //Events
         //---------------------------------------------------
@@ -53,11 +50,88 @@ namespace SequenceTracker
             ModeChanged?.Invoke(this, EventArgs.Empty);
         }   
 
+        internal void MainTab_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            TabPage page = mainTab.TabPages[e.Index];
+            Rectangle tabRect = mainTab.GetTabRect(e.Index);
+
+            Rectangle textRect = new Rectangle
+            (
+                tabRect.X + 6,
+                tabRect.Y + 2,
+                tabRect.Width - 28,
+                tabRect.Height - 4
+            );
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                page.Text,
+                mainTab.Font,
+                textRect,
+                mainTab.ForeColor,
+                TextFormatFlags.Left |
+                TextFormatFlags.VerticalCenter |
+                TextFormatFlags.EndEllipsis
+            );
+
+            Rectangle closeRect = new Rectangle
+            (
+                tabRect.Right - 20,
+                tabRect.Top + (tabRect.Height - 14) /2,
+                14,
+                14
+            );
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                "X",
+                AppConstants.Fonts["TAB_CLOSE_BUTTON"],
+                closeRect,
+                mainTab.ForeColor,
+                TextFormatFlags.HorizontalCenter |
+                TextFormatFlags.VerticalCenter
+            );
+
+        }
+
+        internal void MainTab_MouseDown(object sender, MouseEventArgs e)
+        {
+            if(e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            for(int i = 0; i < mainTab.TabPages.Count; i++)
+            {
+                Rectangle tabRect = mainTab.GetTabRect(i);
+
+                Rectangle closeRect = new Rectangle(
+                    tabRect.Right - 20,
+                    tabRect.Top + (tabRect.Height - 14) / 2,
+                    14,
+                    14
+                );
+
+                if (closeRect.Contains(e.Location))
+                {
+                    TabPage page = mainTab.TabPages[i];
+
+                    mainTab.TabPages.Remove(page);
+                    page.Dispose();
+
+                    return;
+                }
+            }
+        }
+
+      
         //Constructors
         //---------------------------------------------------
         public DisplayPanel() 
         {
             InitializeComponent();
+            mainTab.DrawItem += MainTab_DrawItem;
+            mainTab.MouseDown += MainTab_MouseDown;
         }
         internal DisplayPanel(MainWindow theMainWindow, DataManager theDataManager) : this()
         {
@@ -76,20 +150,22 @@ namespace SequenceTracker
 
         private void InitializeComponent()
         {
-            this.panel2 = new System.Windows.Forms.Panel();
+            this.mainTab = new System.Windows.Forms.TabControl();
             this.SuspendLayout();
             // 
-            // panel2
+            // mainTab
             // 
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(0, 0);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(800, 556);
-            this.panel2.TabIndex = 1;
+            this.mainTab.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mainTab.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.mainTab.Location = new System.Drawing.Point(0, 0);
+            this.mainTab.Name = "mainTab";
+            this.mainTab.SelectedIndex = 0;
+            this.mainTab.Size = new System.Drawing.Size(800, 556);
+            this.mainTab.TabIndex = 0;
             // 
             // DisplayPanel
             // 
-            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.mainTab);
             this.Name = "DisplayPanel";
             this.Size = new System.Drawing.Size(800, 556);
             this.ResumeLayout(false);
@@ -118,10 +194,7 @@ namespace SequenceTracker
 
         internal void CreateTABLE(DataManager dataManager)
         {
-            DeleteCurrentSession();
-
             DataGridView table = new DataGridView();
-            currentSession = table;
 
             //Configurint Table
             table.Dock = DockStyle.Fill;
@@ -146,21 +219,23 @@ namespace SequenceTracker
                 table.Rows.Add(item.Date.ToString("yyyy-MM-dd"), item.Line1, item.Line2);
             }
 
-            currentSession = table;
+            TabPage newPage = new TabPage();
+            newPage.Controls.Add(table);
+            newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+            newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
-            panel2.Controls.Add(currentSession);
+            mainTab.TabPages.Add(newPage);
 
         }
 
         internal void CreateGRAPH(DataManager dataManager)
         {
-            DeleteCurrentSession();
 
             var filteredData = dataManager.GetFilteredData();
 
             Chart chart = new Chart();
             chart.Dock = DockStyle.Fill;
-            chart.BackColor = Color.LightYellow;
+            chart.BackColor = AppConstants.Colors["DISPLAY_PANEL_BACKGROUND"];
 
             ChartArea area = new ChartArea("MainArea");
             chart.ChartAreas.Add(area);
@@ -227,11 +302,15 @@ namespace SequenceTracker
 
             chart.Legends.Add(new Legend("Main Legend"));
 
-            currentSession = chart;
+            TabPage newPage = new TabPage();
+            newPage.Controls.Add(chart);
+            newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+            newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
-            panel2.Controls.Add(currentSession);
+            mainTab.TabPages.Add(newPage);
         }
 
+        /*
         internal void DeleteCurrentSession()
         {
             if (currentSession != null)
@@ -240,6 +319,11 @@ namespace SequenceTracker
                 currentSession.Dispose();
                 currentSession = null;
             }
+        }
+        */
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

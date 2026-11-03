@@ -81,14 +81,13 @@ namespace SequenceTracker
 
             dataManager.Init();
             oracleManager.Init();
-
         }   
 
         internal void InitializeControls()
         {
-            displayPanel1.mainWindow = this;
-            displayPanel1.dataManager = this.dataManager;
-            displayPanel1.SubscribeEvents();
+            displayPanel.mainWindow = this;
+            displayPanel.dataManager = this.dataManager;
+            displayPanel.SubscribeEvents();
         }
 
         internal void SubscribeEvents()
