@@ -55,6 +55,30 @@ namespace SequenceTracker
             TabPage page = mainTab.TabPages[e.Index];
             Rectangle tabRect = mainTab.GetTabRect(e.Index);
 
+            //Fill BG Color on TAB
+            using(SolidBrush brush = new SolidBrush(AppConstants.Colors["TAB_BACKGROUND"]))
+            {
+                e.Graphics.FillRectangle(
+                    brush,
+                    tabRect
+                );
+            }
+
+            using(Pen pen = new Pen(AppConstants.Colors["TAB_BORDER"], 2))
+            {
+                Rectangle borderRect = tabRect;
+
+                borderRect.Width -= 2;
+                borderRect.Height += 1;
+                borderRect.X += 1;
+                borderRect.Y += 1;
+
+                e.Graphics.DrawRectangle(
+                    pen,
+                    borderRect
+                );
+            }
+
             Rectangle textRect = new Rectangle
             (
                 tabRect.X + 6,
@@ -66,9 +90,9 @@ namespace SequenceTracker
             TextRenderer.DrawText(
                 e.Graphics,
                 page.Text,
-                mainTab.Font,
+                AppConstants.Fonts["TABLE_TAB"],
                 textRect,
-                mainTab.ForeColor,
+                AppConstants.Colors["TAB_FONT"],
                 TextFormatFlags.Left |
                 TextFormatFlags.VerticalCenter |
                 TextFormatFlags.EndEllipsis
@@ -203,13 +227,17 @@ namespace SequenceTracker
             table.ReadOnly = true;
             table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-            
+            //Configure Column Header Style
+            table.EnableHeadersVisualStyles = false;
+
+            table.ColumnHeadersDefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
 
             //Create Columns
             table.Columns.Add("Date", "Date");
             table.Columns.Add("COUNT_LINE_1", "LINE 1 - Sequence Count");
             table.Columns.Add("COUNT_LINE_2", "LINE 2 - Sequence Count");
 
+            
 
             //Create Rows
             var filteredData = dataManager.GetFilteredData();
@@ -225,7 +253,7 @@ namespace SequenceTracker
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
             mainTab.TabPages.Add(newPage);
-
+            mainTab.SelectedTab = newPage;
         }
 
         internal void CreateGRAPH(DataManager dataManager)
@@ -308,6 +336,7 @@ namespace SequenceTracker
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
             mainTab.TabPages.Add(newPage);
+            mainTab.SelectedTab = newPage;
         }
 
         /*

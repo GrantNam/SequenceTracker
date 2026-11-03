@@ -55,6 +55,14 @@ namespace SequenceTracker
         {
             InitializeComponent();
 
+            Initialize();
+        }
+
+        //Initialization
+        //---------------------------------------------
+        
+        internal void Initialize()
+        {
             InitializeManager();
 
             InitializeControls();
@@ -63,9 +71,6 @@ namespace SequenceTracker
 
             StartThreads();
         }
-
-        //Initialization
-        //---------------------------------------------
         internal void InitializeManager()
         {
             dataManager = new DataManager();
