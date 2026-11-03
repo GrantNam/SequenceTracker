@@ -28,7 +28,7 @@ namespace SequenceTracker
         {
             Type type = typeof(T);
 
-            MemberInfo member = type.GetMember(memberName, BindingFlags.Public | BindingFlags.Instance).FirstOrDefault();
+            MemberInfo member = type.GetMember(memberName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault();
 
             if(member == null)
             {

@@ -96,6 +96,7 @@
   <ItemGroup>
     <Compile Include="Attribute\OracleAttributeHelper.cs" />
     <Compile Include="DataManager\DataManager.cs" />
+    <Compile Include="DataManager\SequenceCountResult.cs" />
     <Compile Include="UI\DisplayPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>

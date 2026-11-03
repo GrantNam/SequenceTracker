@@ -57,7 +57,11 @@ namespace SequenceTracker
 
             InitializeManager();
 
+            InitializeControls();
+
             SubscribeEvents();
+
+            StartThreads();
         }
 
         //Initialization
@@ -79,6 +83,13 @@ namespace SequenceTracker
             oracleManager.Init();
 
         }   
+
+        internal void InitializeControls()
+        {
+            displayPanel1.mainWindow = this;
+            displayPanel1.dataManager = this.dataManager;
+            displayPanel1.SubscribeEvents();
+        }
 
         internal void SubscribeEvents()
         {
@@ -105,6 +116,11 @@ namespace SequenceTracker
                     this.searchBar = control as SearchBar;
                 }
             }
+        }
+
+        internal void StartThreads()
+        {
+            oracleManager.start();
         }
 
         private void displayPanel1_Load(object sender, EventArgs e)
@@ -143,7 +159,7 @@ namespace SequenceTracker
                 case "Table":
                     theModel = MODEL.TABLE;
                     break;
-                case "Bar Graph":
+                case "Chart Graph":
                     theModel = MODEL.BAR_GRAPH;
                     break;
                 case "Trend Graph":

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.LinkLabel;
 
 
 namespace SequenceTracker
@@ -130,6 +131,42 @@ namespace SequenceTracker
             }
             string YYYYMMDD = date.ToString("yyyyMMdd");
             return YYYYMMDD;
+        }
+
+        internal List<SequenceCountResult> GetFilteredData()
+        {
+            var line1 = Sequences.Where(seq => seq.StationCode == "P370")
+                                .OrderByDescending(seq => seq.Date)
+                                .ToList();
+            var line2 = Sequences.Where(seq => seq.StationCode == "P375")
+                                .OrderByDescending(seq => seq.Date)
+                                .ToList();
+
+            var result = line1
+
+            .Select(x => new
+            {
+                Date = x.Date,
+                Line1 = (int?)x.Count,
+                Line2 = (int?)null
+            })
+            .Concat(line2.Select(x => new
+            {
+                Date = x.Date,
+                Line1 = (int?)null,
+                Line2 = (int?)x.Count
+            }))
+            .GroupBy(x => x.Date)
+            .Select(g => new SequenceCountResult
+            {
+                Date = g.Key,
+                Line1 = g.FirstOrDefault(x => x.Line1.HasValue)?.Line1,
+                Line2 = g.FirstOrDefault(x => x.Line2.HasValue)?.Line2
+            })
+            .OrderByDescending(x => x.Date)
+            .ToList();
+
+            return result;
         }
     }
 }

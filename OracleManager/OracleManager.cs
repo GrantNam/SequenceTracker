@@ -33,11 +33,15 @@ namespace SequenceTracker
         //--------------------------------------------
         internal Thread workerThread;
 
+        //Events
+        //--------------------------------------------
         AutoResetEvent OrclSignal = new AutoResetEvent(false);
+
         //Flags
         //--------------------------------------------
         //internal bool isConnected;
         internal bool threadRunning = false;
+
         //Constructor
         //--------------------------------------------
         public OracleManager()
@@ -69,6 +73,7 @@ namespace SequenceTracker
 
             while (threadRunning)
             {
+                Console.WriteLine("Thread Running...");
                 while (taskQueue.TryDequeue(out task))
                 {
                     try

@@ -3,20 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 
 namespace SequenceTracker
 {
     internal class DisplayPanel : UserControl
     {
-        private DataGridView dataGridView1;
-        private Panel panel1;
+
+
 
         //Managers
         //--------------------------------------------------
-        MainWindow mainWindow;
-        DataManager dataManager;
+        internal MainWindow mainWindow;
+        internal DataManager dataManager;
+        private Panel panel2;
 
         //Fields
         //--------------------------------------------------
@@ -31,6 +34,16 @@ namespace SequenceTracker
         //---------------------------------------------------
         internal void OnDataUpdated(object sender, EventArgs e)
         {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    OnDataUpdated(sender, e);
+                }));
+
+                return;
+            }
+
             Redraw();
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -42,7 +55,10 @@ namespace SequenceTracker
 
         //Constructors
         //---------------------------------------------------
-        public DisplayPanel() { }
+        public DisplayPanel() 
+        {
+            InitializeComponent();
+        }
         internal DisplayPanel(MainWindow theMainWindow, DataManager theDataManager) : this()
         {
             mainWindow = theMainWindow;
@@ -60,37 +76,22 @@ namespace SequenceTracker
 
         private void InitializeComponent()
         {
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.panel1 = new System.Windows.Forms.Panel();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
-            // dataGridView1
+            // panel2
             // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(711, 450);
-            this.dataGridView1.TabIndex = 0;
-            // 
-            // panel1
-            // 
-            this.panel1.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(711, 100);
-            this.panel1.TabIndex = 1;
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(0, 0);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(800, 556);
+            this.panel2.TabIndex = 1;
             // 
             // DisplayPanel
             // 
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.panel2);
             this.Name = "DisplayPanel";
-            this.Size = new System.Drawing.Size(711, 450);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.Size = new System.Drawing.Size(800, 556);
             this.ResumeLayout(false);
 
         }
@@ -105,10 +106,10 @@ namespace SequenceTracker
                     CreateTABLE(dataManager);
                     break;
                 case MODEL.BAR_GRAPH:
-                    CreateBAR_GRAPH(dataManager);
+                    CreateGRAPH(dataManager);
                     break;
                 case MODEL.TREND_GRAPH:
-                    CreateTREND_GRAPH(dataManager);
+                    CreateGRAPH(dataManager);
                     break;
                 default:
                     break;
@@ -136,18 +137,99 @@ namespace SequenceTracker
             table.Columns.Add("COUNT_LINE_1", "LINE 1 - Sequence Count");
             table.Columns.Add("COUNT_LINE_2", "LINE 2 - Sequence Count");
 
-            int rowSize = dataManager.Sequences.Count;
 
+            //Create Rows
+            var filteredData = dataManager.GetFilteredData();
+
+            foreach(var item in filteredData)
+            {
+                table.Rows.Add(item.Date.ToString("yyyy-MM-dd"), item.Line1, item.Line2);
+            }
+
+            currentSession = table;
+
+            panel2.Controls.Add(currentSession);
 
         }
 
-        internal void CreateBAR_GRAPH(DataManager dataManager)
+        internal void CreateGRAPH(DataManager dataManager)
         {
-            // Implementation for creating a table view
-        }
-        internal void CreateTREND_GRAPH(DataManager dataManager)
-        {
-            // Implementation for creating a table view
+            DeleteCurrentSession();
+
+            var filteredData = dataManager.GetFilteredData();
+
+            Chart chart = new Chart();
+            chart.Dock = DockStyle.Fill;
+            chart.BackColor = Color.LightYellow;
+
+            ChartArea area = new ChartArea("MainArea");
+            chart.ChartAreas.Add(area);
+
+            area.AxisX.Title = "Production Date";
+            area.AxisY.Title = "Sequence Count";
+
+            area.AxisX.Interval = 1;
+            area.AxisX.IntervalType = DateTimeIntervalType.Days;
+            area.AxisY.Minimum = 0;
+
+            area.AxisX.ScaleView.Size = 7;
+            area.AxisX.ScaleView.SizeType = DateTimeIntervalType.Days;
+            area.AxisX.ScrollBar.Enabled = true;
+            area.AxisX.ScrollBar.IsPositionedInside = false;
+
+            area.AxisX.ScaleView.Zoomable = true;
+
+            Series line1 = new Series("Line 1");
+            Series line2 = new Series("Line 2");
+
+            line1.XValueType = ChartValueType.DateTime;
+            line2.XValueType = ChartValueType.DateTime;
+
+            if (DataManager.filter.model == MODEL.BAR_GRAPH)
+            {
+                line1.ChartType = SeriesChartType.Column;
+                line2.ChartType = SeriesChartType.Column;
+            }
+            else if (DataManager.filter.model == MODEL.TREND_GRAPH)
+            {
+
+                line1.ChartType = SeriesChartType.Line;
+                line2.ChartType = SeriesChartType.Line;
+
+                line1.BorderWidth = 3;
+                line1.MarkerStyle = MarkerStyle.Circle;
+                line1.MarkerSize = 7;
+
+                line2.BorderWidth = 3;
+                line2.MarkerStyle = MarkerStyle.Circle;
+                line2.MarkerSize = 7;
+
+
+            }
+
+                foreach (var item in filteredData.OrderBy(x => x.Date))
+                {
+                    if (item.Line1.HasValue)
+                    {
+                        line1.Points.AddXY(item.Date, item.Line1.Value);
+                    }
+
+                    if (item.Line2.HasValue)
+                    {
+                        line2.Points.AddXY(item.Date, item.Line2.Value);
+                    }
+                }
+
+            chart.Series.Add(line1);
+            chart.Series.Add(line2);
+
+            area.AxisX.LabelStyle.Format = "yyyy-MM-dd";
+
+            chart.Legends.Add(new Legend("Main Legend"));
+
+            currentSession = chart;
+
+            panel2.Controls.Add(currentSession);
         }
 
         internal void DeleteCurrentSession()
