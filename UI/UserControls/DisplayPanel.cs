@@ -27,8 +27,31 @@ namespace SequenceTracker
         public event EventHandler DataUpdated;
         public event EventHandler ModeChanged;
 
+        //Event Subscription
+        //---------------------------------------------------
+        internal void SubscribeEvents()
+        {
+            mainWindow.DataUpdated += OnDataUpdated;
+            mainWindow.ModeChanged += OnModeChanged;
+            mainWindow.RowDataUpdated += OnRowDataUpdated;
+        }
         //Event Handlers
         //---------------------------------------------------
+        internal void OnRowDataUpdated(object sender, EventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    OnRowDataUpdated(sender, e);
+                }));
+
+                return;
+            }
+
+            DailyDetailWindow dailyDetailwindow = new DailyDetailWindow(dataManager);
+            dailyDetailwindow.Show();
+        }
         internal void OnDataUpdated(object sender, EventArgs e)
         {
             if (this.InvokeRequired)
@@ -166,12 +189,6 @@ namespace SequenceTracker
 
         //Initialization
         //---------------------------------------------------
-        internal void SubscribeEvents()
-        {
-            mainWindow.DataUpdated += OnDataUpdated;
-            mainWindow.ModeChanged += OnModeChanged;
-        }
-
         private void InitializeComponent()
         {
             this.mainTab = new System.Windows.Forms.TabControl();
@@ -218,7 +235,7 @@ namespace SequenceTracker
 
         internal void CreateTABLE(DataManager dataManager)
         {
-            DataGridView_DB dgvSeqCount = new DataGridView_DB();
+            DataGridView_DB dgvSeqCount = new DataGridView_DB(mainWindow);
 
             //Configurint Table
             dgvSeqCount.Dock = DockStyle.Fill;
@@ -252,11 +269,11 @@ namespace SequenceTracker
             }
 
             //Create Rows
-            var filteredData = dataManager.GetFilteredData();
+            var filteredData = dataManager.GetFilteredData(dataManager.Sequences);
 
             foreach(var item in filteredData)
             {
-                dgvSeqCount.Rows.Add
+                int rowIndex = dgvSeqCount.Rows.Add
                 (
                     item.Date.ToString("yyyy-MM-dd"), 
                     item.Line1_CarType_1, 
@@ -268,6 +285,8 @@ namespace SequenceTracker
                     item.Line2_CarType_3,
                     item.getLine2Total()
                 );
+
+                dgvSeqCount.Rows[rowIndex].Tag = item;
             }
 
             dgvSeqCount.Columns["Date"].Visible = DataManager.filter.LINE_1 || DataManager.filter.LINE_2;
@@ -292,7 +311,7 @@ namespace SequenceTracker
         internal void CreateGRAPH(DataManager dataManager)
         {
 
-            var filteredData = dataManager.GetFilteredData();
+            var filteredData = dataManager.GetFilteredData(dataManager.Sequences);
 
             Chart chart = new Chart();
             chart.Dock = DockStyle.Fill;

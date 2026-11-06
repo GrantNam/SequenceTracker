@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,20 +18,25 @@ namespace SequenceTracker
         internal MainWindow mainWindow;
 
         internal List<SequenceCount> Sequences = new List<SequenceCount>();
+        internal List<SequenceCount> DailySequences = new List<SequenceCount>();
 
         internal static Filter filter = new Filter();
 
         //Events
         //---------------------------------------------------------------
         public event EventHandler DataUpdated;
-
+        public event EventHandler RowDataUpdated;
         //Event Handlers
         //---------------------------------------------------------------
         internal void OnSerchRequested(object sender, EventArgs e)
         {
             requestUpdate();
-        }   
+        }
 
+        internal void OnRowHeaderClicked(object sender, SequenceCountResult result)
+        {
+            requestRowData(result);
+        }
         //constructor
         //----------------------------------------------------------------
         public DataManager() { }
@@ -57,6 +63,7 @@ namespace SequenceTracker
         internal void SubscribeEvents()
         {
             mainWindow.SearchRequested += OnSerchRequested;
+            mainWindow.RowHeaderClicked += OnRowHeaderClicked;
         }
         //Methods
         //---------------------------------------------------------------
@@ -65,7 +72,22 @@ namespace SequenceTracker
             Sequences.Clear();
         }
 
+        internal void requestRowData(SequenceCountResult result)
+        {
+            string sql = getRowSQL(result);
+            List<LINE> lines = new List<LINE>();
 
+            if (filter.LINE_1)
+            {
+                lines.Add(LINE.FINAL_1);
+            }
+            if (filter.LINE_2)
+            {
+                lines.Add(LINE.FINAL_2);
+            }
+
+            oracleManager.getOracleDataEnqueue(sql, lines, getRowData);
+        }
 
         internal void requestUpdate()
         {
@@ -83,7 +105,34 @@ namespace SequenceTracker
 
             oracleManager.getOracleDataEnqueue(SQL, lines, updateData);
         }
+        internal void getRowData(List<(LINE, int, string, int)> data)
+        {
+            string theStationCode = "";
+            DateTime theDate;
 
+            DailySequences.Clear();
+
+            List<SequenceCount> tempSeq = new List<SequenceCount>();
+
+            foreach (var item in data)
+            {
+                try
+                {
+                    theStationCode = AppConstants.Lines[item.Item1];
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+                theDate = DateTime.ParseExact(item.Item2.ToString(), "yyyyMMddHH", System.Globalization.CultureInfo.InvariantCulture);
+
+                DailySequences.Add(new SequenceCount(theStationCode, theDate, item.Item3, item.Item4));
+            }
+
+            Console.WriteLine("RowData Updated -- Count: " + DailySequences.Count);
+            RowDataUpdated?.Invoke(this, EventArgs.Empty);
+        }
         internal void updateData(List<(LINE, int ,string, int)> data)
         {
             string theStationCode = "";
@@ -112,8 +161,24 @@ namespace SequenceTracker
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
+        internal string getRowSQL(SequenceCountResult result)
+        {
+ 
+            string SQL = @"";
+            string SELECT = "SELECT " + "SUBSTR(REPORTDATE, 0, 10) as PRODDATE, " + OracleAttributeHelper.GetColumnName<SequenceCountResult>("Line1_CarType_1") + ", Count(*) as COUNT"; 
+            string FROM = " FROM " + OracleAttributeHelper.GetTableName<SequenceCountResult>();
+            string WHERE = " WHERE " + OracleAttributeHelper.GetColumnName<SequenceCountResult>("Date") + " IN " + "'" + convertDate(result.Date) + "'";
+            string GROUPBY = " GROUP BY " + OracleAttributeHelper.GetColumnName<SequenceCountResult>("Date") + ", " + OracleAttributeHelper.GetColumnName<SequenceCountResult>("Line1_CarType_1") + ", SUBSTR(REPORTDATE, 0, 10)";
+
+            SQL += SELECT + FROM + WHERE + GROUPBY;
+
+            Console.WriteLine(SQL);
+
+            return SQL;
+        }
         internal string getSeqCountInitSQL()
         {
+
             string SQL = @"";
             string SELECT = "SELECT ";
             string FROM = " FROM " + OracleAttributeHelper.GetIndexTable<SequenceCount>("Line_1_CARTYPE");
@@ -136,7 +201,8 @@ namespace SequenceTracker
             return SQL;
         }
         internal string getSQL()
-        {   
+        {
+
             string START_DATE = convertDate(filter.startDate);
             string END_DATE = convertDate(filter.endDate); 
             string DATE = OracleAttributeHelper.GetColumnName<SequenceCount>("Date") + " BETWEEN " + START_DATE + " AND " + END_DATE;
@@ -164,12 +230,12 @@ namespace SequenceTracker
             return YYYYMMDD;
         }
 
-        internal List<SequenceCountResult> GetFilteredData()
+        internal List<SequenceCountResult> GetFilteredData(List<SequenceCount> sequences)
         {
-            var line1 = Sequences.Where(seq => seq.StationCode == "P370")
+            var line1 = sequences.Where(seq => seq.StationCode == "P370")
                                 .OrderByDescending(seq => seq.Date)
                                 .ToList();
-            var line2 = Sequences.Where(seq => seq.StationCode == "P375")
+            var line2 = sequences.Where(seq => seq.StationCode == "P375")
                                 .OrderByDescending(seq => seq.Date)
                                 .ToList();
 

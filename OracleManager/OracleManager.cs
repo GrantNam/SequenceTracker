@@ -194,6 +194,7 @@ namespace SequenceTracker
         }
 
 
+        //Returns List<(LINE, PRODDATE | TIME, CARTYPE, COUNT)>
         internal List<(LINE, int, string, int)> getOracleData(string SQL, LINE line)
         {
             List<(LINE, int, string, int)> data = new List<(LINE, int, string, int)>();

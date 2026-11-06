@@ -6,17 +6,30 @@ using System.Threading.Tasks;
 
 namespace SequenceTracker
 {
+    [OracleTable("SEQUENCEINFO")]
     internal class SequenceCountResult
-    {
+    {   
+
+        //Fields
+        //----------------------------------------------------
+        [OracleColumn("PRODDATE")]
         internal DateTime Date;
 
+        [OracleColumn("CARTYPE")]
         internal int? Line1_CarType_1;
+        [OracleColumn("CARTYPE")]
         internal int? Line1_CarType_2;
+        [OracleColumn("CARTYPE")]
         internal int? Line1_CarType_3;
+        [OracleColumn("CARTYPE")]
         internal int? Line2_CarType_1;
+        [OracleColumn("CARTYPE")]
         internal int? Line2_CarType_2;
+        [OracleColumn("CARTYPE")]
         internal int? Line2_CarType_3;
 
+        //Constructor
+        //-----------------------------------------------------
         public SequenceCountResult() { }
 
         //Methods

@@ -96,25 +96,31 @@
   <ItemGroup>
     <Compile Include="AppConstants\AppConstants.cs" />
     <Compile Include="Attribute\OracleAttributeHelper.cs" />
-    <Compile Include="UI\DataGridView_DB.cs">
+    <Compile Include="UI\Windows\DailyDetailWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Windows\DailyDetailWindow.Designer.cs">
+      <DependentUpon>DailyDetailWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\UserControls\DataGridView_DB.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DataManager\DataManager.cs" />
     <Compile Include="DataManager\SequenceCountResult.cs" />
-    <Compile Include="UI\DisplayPanel.cs">
+    <Compile Include="UI\UserControls\DisplayPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Attribute\OracleAttribute.cs" />
     <Compile Include="DataManager\Filter.cs" />
     <Compile Include="OracleManager\OracleManager.cs" />
-    <Compile Include="UI\SearchBar.cs">
+    <Compile Include="UI\UserControls\SearchBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="DataManager\SequenceCount.cs" />
-    <Compile Include="UI\MainWindow.cs">
+    <Compile Include="UI\Windows\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\MainWindow.Designer.cs">
+    <Compile Include="UI\Windows\MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
@@ -128,13 +134,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="UI\DisplayPanel.resx">
+    <EmbeddedResource Include="UI\UserControls\DisplayPanel.resx">
       <DependentUpon>DisplayPanel.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\MainWindow.resx">
+    <EmbeddedResource Include="UI\Windows\DailyDetailWindow.resx">
+      <DependentUpon>DailyDetailWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Windows\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\SearchBar.resx">
+    <EmbeddedResource Include="UI\UserControls\SearchBar.resx">
       <DependentUpon>SearchBar.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Oracle.DataAccess.Common.Configuration.Section.xsd">

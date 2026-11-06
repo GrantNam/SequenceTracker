@@ -27,9 +27,28 @@ namespace SequenceTracker
         internal event EventHandler DataUpdated;
         internal event EventHandler SearchRequested;
         internal event EventHandler ModeChanged;
+        internal event Action<object, SequenceCountResult> RowHeaderClicked;
+        internal event EventHandler RowDataUpdated;
 
+        //Subscriptions
+        //---------------------------------------------
+        internal void SubscribeEvents()
+        {
+            dataManager.DataUpdated += OnDataUpdated;
+            searchBar.SearchRequested += OnSearchRequested;
+            searchBar.ModeChanged += OnModeChanged;
+            dataManager.RowDataUpdated += OnRowDataUpdated;
+        }
         //Event Handlers
         //---------------------------------------------
+        internal void OnRowDataUpdated(object sender, EventArgs e)
+        {
+            RowDataUpdated?.Invoke(sender, e);
+        }
+        internal void OnRowHeaderClicked(object sender, SequenceCountResult e)
+        {
+            RowHeaderClicked?.Invoke(this, e);
+        }
         internal void OnDataUpdated(object sender, EventArgs e)
         {
             DataUpdated?.Invoke(this, EventArgs.Empty);
@@ -94,12 +113,7 @@ namespace SequenceTracker
             displayPanel.SubscribeEvents();
         }
 
-        internal void SubscribeEvents()
-        {
-            dataManager.DataUpdated += OnDataUpdated;
-            searchBar.SearchRequested += OnSearchRequested;
-            searchBar.ModeChanged += OnModeChanged;
-        }
+        
 
         internal void AttachControls()
         {
