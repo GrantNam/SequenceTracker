@@ -38,5 +38,20 @@ namespace SequenceTracker
             ColumnName = columnName;
         }
     }
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    internal class OracleIndexAttribute : Attribute
+    {
+        public List<string> ColumnNames { get; set; } //0: Column Name || 1: CarTypeNo Index
+        public string TableName;
+
+        public OracleIndexAttribute(string Table, string columnName, string index)
+        {
+            ColumnNames = new List<string>();
+            TableName = Table;
+            ColumnNames.Add(index);
+            ColumnNames.Add(columnName);
+        }
+    }
+
 
 }

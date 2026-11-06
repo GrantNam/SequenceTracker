@@ -68,8 +68,6 @@ namespace SequenceTracker
             InitializeControls();
 
             SubscribeEvents();
-
-            StartThreads();
         }
         internal void InitializeManager()
         {
@@ -84,8 +82,9 @@ namespace SequenceTracker
 
             AttachControls();
 
-            dataManager.Init();
             oracleManager.Init();
+            dataManager.Init();
+            
         }   
 
         internal void InitializeControls()
@@ -120,11 +119,6 @@ namespace SequenceTracker
                     this.searchBar = control as SearchBar;
                 }
             }
-        }
-
-        internal void StartThreads()
-        {
-            oracleManager.start();
         }
 
         private void displayPanel1_Load(object sender, EventArgs e)

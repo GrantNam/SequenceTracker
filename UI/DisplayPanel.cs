@@ -218,37 +218,70 @@ namespace SequenceTracker
 
         internal void CreateTABLE(DataManager dataManager)
         {
-            DataGridView table = new DataGridView();
+            DataGridView_DB dgvSeqCount = new DataGridView_DB();
 
             //Configurint Table
-            table.Dock = DockStyle.Fill;
-            table.AllowUserToAddRows = false;
-            table.AllowUserToDeleteRows = false;
-            table.ReadOnly = true;
-            table.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvSeqCount.Dock = DockStyle.Fill;
+            dgvSeqCount.AllowUserToAddRows = false;
+            dgvSeqCount.AllowUserToDeleteRows = false;
+            dgvSeqCount.ReadOnly = true;
+            dgvSeqCount.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
             //Configure Column Header Style
-            table.EnableHeadersVisualStyles = false;
+            dgvSeqCount.EnableHeadersVisualStyles = false;
 
-            table.ColumnHeadersDefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
+            dgvSeqCount.ColumnHeadersDefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
 
             //Create Columns
-            table.Columns.Add("Date", "Date");
-            table.Columns.Add("COUNT_LINE_1", "LINE 1 - Sequence Count");
-            table.Columns.Add("COUNT_LINE_2", "LINE 2 - Sequence Count");
+            dgvSeqCount.Columns.Add("Date", "Date");
 
-            
+            //if (DataManager.filter.LINE_1)
+            {
+                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_1", AppConstants.CarTypes_Line_1[1] + " - Count");
+                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_2", AppConstants.CarTypes_Line_1[2] + " - Count");
+                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_3", AppConstants.CarTypes_Line_1[3] + " - Count");
+                dgvSeqCount.Columns.Add("COUNT_LINE_1_Total", "Total [Line 1]");
+            }
+
+            //if (DataManager.filter.LINE_2)
+            {
+                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_1", AppConstants.CarTypes_Line_2[1] + " - Count");
+                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_2", AppConstants.CarTypes_Line_2[2] + " - Count");
+                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_3", AppConstants.CarTypes_Line_2[3] + " - Count");
+                dgvSeqCount.Columns.Add("COUNT_LINE_2_Total", "Total [Line 2]");
+            }
 
             //Create Rows
             var filteredData = dataManager.GetFilteredData();
 
             foreach(var item in filteredData)
             {
-                table.Rows.Add(item.Date.ToString("yyyy-MM-dd"), item.Line1, item.Line2);
+                dgvSeqCount.Rows.Add
+                (
+                    item.Date.ToString("yyyy-MM-dd"), 
+                    item.Line1_CarType_1, 
+                    item.Line1_CarType_2, 
+                    item.Line1_CarType_3, 
+                    item.getLine1Total(),
+                    item.Line2_CarType_1,
+                    item.Line2_CarType_2,
+                    item.Line2_CarType_3,
+                    item.getLine2Total()
+                );
             }
 
+            dgvSeqCount.Columns["Date"].Visible = DataManager.filter.LINE_1 || DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_1"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_2"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_3"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["COUNT_LINE_1_Total"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_1"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_2"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_3"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["COUNT_LINE_2_Total"].Visible = DataManager.filter.LINE_2;
+
             TabPage newPage = new TabPage();
-            newPage.Controls.Add(table);
+            newPage.Controls.Add(dgvSeqCount);
             newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
@@ -285,6 +318,7 @@ namespace SequenceTracker
             Series line1 = new Series("Line 1");
             Series line2 = new Series("Line 2");
 
+
             line1.XValueType = ChartValueType.DateTime;
             line2.XValueType = ChartValueType.DateTime;
 
@@ -312,14 +346,14 @@ namespace SequenceTracker
 
                 foreach (var item in filteredData.OrderBy(x => x.Date))
                 {
-                    if (item.Line1.HasValue)
+                    if (item.getLine1Total().HasValue)
                     {
-                        line1.Points.AddXY(item.Date, item.Line1.Value);
+                        line1.Points.AddXY(item.Date, item.getLine1Total().Value);
                     }
 
-                    if (item.Line2.HasValue)
+                    if (item.getLine2Total().HasValue)
                     {
-                        line2.Points.AddXY(item.Date, item.Line2.Value);
+                        line2.Points.AddXY(item.Date, item.getLine2Total().Value);
                     }
                 }
 

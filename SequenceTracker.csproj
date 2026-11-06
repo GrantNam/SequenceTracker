@@ -96,6 +96,9 @@
   <ItemGroup>
     <Compile Include="AppConstants\AppConstants.cs" />
     <Compile Include="Attribute\OracleAttributeHelper.cs" />
+    <Compile Include="UI\DataGridView_DB.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataManager\DataManager.cs" />
     <Compile Include="DataManager\SequenceCountResult.cs" />
     <Compile Include="UI\DisplayPanel.cs">

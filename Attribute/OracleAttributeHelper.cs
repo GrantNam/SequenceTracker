@@ -44,5 +44,47 @@ namespace SequenceTracker
 
             return attribute?.ColumnName;
         }
+
+        public static List<string> GetIndexColumns<T>(string memberName)
+        {
+            Type type = typeof(T);
+
+            MemberInfo member = type.GetMember(memberName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).FirstOrDefault();
+
+            if (member == null)
+            {
+                throw new Exception($"Member {memberName} not found on {type.Name}");
+            }
+
+            OracleIndexAttribute attribute = member.GetCustomAttribute<OracleIndexAttribute>();
+
+            if (attribute == null)
+            {
+                throw new Exception($"OracleColumn attribute not found on member {memberName} of {type.Name}");
+            }
+
+            return attribute?.ColumnNames;
+        }
+
+        public static string GetIndexTable<T>(string memberName)
+        {
+            Type type = typeof(T);
+
+            MemberInfo member = type.GetMember(memberName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).FirstOrDefault();
+
+            if (member == null)
+            {
+                throw new Exception($"Member {memberName} not found on {type.Name}");
+            }
+
+            OracleIndexAttribute attribute = member.GetCustomAttribute<OracleIndexAttribute>();
+
+            if (attribute == null)
+            {
+                throw new Exception($"OracleColumn attribute not found on member {memberName} of {type.Name}");
+            }
+
+            return attribute?.TableName;
+        }
     }
 }

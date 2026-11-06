@@ -52,11 +52,12 @@ namespace SequenceTracker
         //---------------------------------------------
         internal void Init()
         {
+            Start();
         }
 
         //Thread Control
         //-----------------------------------------------
-        internal void start()
+        internal void Start()
         {
             workerThread = new Thread(threadWork);
             threadRunning = true;
@@ -108,12 +109,32 @@ namespace SequenceTracker
 
         //Task Enqueue
         //------------------------------------------------
+        internal void getSequenceCountInitEnqueue(string SQL, Action<List<string>, List<string>> callback)
+        {   
+            List<LINE> lines = new List<LINE>();
 
-        internal void getOracleDataEnqueue(string SQL, List<LINE> lines, Action<List<(int, int, LINE)>> callback)
+            lines.Add(LINE.FINAL_1);
+            lines.Add(LINE.FINAL_2);
+
+            Action task = () =>
+            {
+                (List<string>, List<string>) data = (new List<string>(), new List<string>());
+
+                int i = 0;
+
+                data.Item1 = getSequenceCountInit(SQL, lines[0]);
+                data.Item2 = getSequenceCountInit(SQL, lines[1]);
+
+                callback(data.Item1, data.Item2);
+            };
+
+            addTask(task);
+        }
+        internal void getOracleDataEnqueue(string SQL, List<LINE> lines, Action<List<(LINE, int, string, int)>> callback)
         {
             Action task = () =>
             {
-                List<(int, int, LINE)> data = new List<(int, int, LINE)>();
+                List<(LINE, int, string, int)> data = new List<(LINE, int, string, int)>();
 
                 foreach(LINE line in lines)
                 {   
@@ -128,9 +149,54 @@ namespace SequenceTracker
 
         //Methods
         //-----------------------------------------------
-        internal List<(int, int, LINE)> getOracleData(string SQL, LINE line)
+
+        internal List<string> getSequenceCountInit(string SQL, LINE line)
         {
-            List<(int, int, LINE)> data = new List<(int, int, LINE)>();
+            List<string> data = new List<string>();
+
+            try
+            {
+                string ConnectionString = ConfigurationManager.ConnectionStrings[line.ToString()].ConnectionString;
+
+                using (OracleConnection connection = new OracleConnection(ConnectionString))
+                {
+                    connection.Open();
+
+                    using (OracleCommand command = new OracleCommand(SQL, connection))
+                    {
+                        using (OracleDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                try
+                                {   
+                                    if(reader[OracleAttributeHelper.GetIndexColumns<SequenceCount>("Line_1_CARTYPE")[1]] == DBNull.Value)
+                                    {
+                                        data.Add("Not Configured");
+                                        continue;
+                                    }
+                                    data.Add(reader[OracleAttributeHelper.GetIndexColumns<SequenceCount>("Line_1_CARTYPE")[1]].ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.ToString());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OracleException ex)
+            {
+                Console.WriteLine("Unexpected Error While Initializing Data");
+            }
+            return data;
+        }
+
+
+        internal List<(LINE, int, string, int)> getOracleData(string SQL, LINE line)
+        {
+            List<(LINE, int, string, int)> data = new List<(LINE, int, string, int)>();
 
             try
             {
@@ -144,14 +210,17 @@ namespace SequenceTracker
                     {
                         using(OracleDataReader reader = command.ExecuteReader())
                         {
-                            int seqCount = 0;
+                            int Count = 0;
+                            string CarType = "";
                             int prodDate = 0;
 
                             while(reader.Read())
-                            {
-                                seqCount = Convert.ToInt32(reader["Count"]);
+                            {   
+                                Count = Convert.ToInt32(reader["COUNT"]);
+                                CarType = reader["CARTYPE"].ToString();
                                 prodDate = Convert.ToInt32(reader["PRODDATE"]);
-                                data.Add((seqCount, prodDate, line));
+                                data.Add((line, prodDate, CarType, Count));
+                                CarType = "";
                             }
                         }
                     }
@@ -159,7 +228,7 @@ namespace SequenceTracker
             }
             catch (OracleException ex)
             {
-                Console.WriteLine("Unexpected Error While Querrying Data");
+                Console.WriteLine($"Unexpected Error While Querrying Data");
             }
             
 

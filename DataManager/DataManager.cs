@@ -44,6 +44,14 @@ namespace SequenceTracker
         internal void Init()
         {
             SubscribeEvents();
+            InitializeSequenceCount();
+        }
+
+        internal void InitializeSequenceCount()
+        {
+            string sql = getSeqCountInitSQL();
+
+            oracleManager.getSequenceCountInitEnqueue(sql, SequenceCount.Init);
         }
 
         internal void SubscribeEvents()
@@ -61,8 +69,6 @@ namespace SequenceTracker
 
         internal void requestUpdate()
         {
-            Clear();
-
             string SQL = getSQL();
             List<LINE> lines = new List<LINE>();
 
@@ -78,33 +84,57 @@ namespace SequenceTracker
             oracleManager.getOracleDataEnqueue(SQL, lines, updateData);
         }
 
-        internal void updateData(List<(int, int, LINE)> data)
+        internal void updateData(List<(LINE, int ,string, int)> data)
         {
             string theStationCode = "";
             DateTime theDate;
 
+            Clear();
+
+
+
             foreach (var item in data)
             {
-                if (item.Item3 == LINE.FINAL_1 || item.Item3 == LINE.TRIM_1 || item.Item3 == LINE.DOOR_1)
+                try
                 {
-                    theStationCode = "P370";
+                    theStationCode = AppConstants.Lines[item.Item1];
                 }
-                else if (item.Item3 == LINE.FINAL_2 || item.Item3 == LINE.TRIM_2 || item.Item3 == LINE.DOOR_2)
+                catch (Exception ex)
                 {
-                    theStationCode = "P375";
+                    Console.WriteLine(ex.Message);
                 }
-                else
-                {
-                    throw new Exception("Invalid line information");
-                }
-                    theDate = DateTime.ParseExact(item.Item2.ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
 
-                Sequences.Add(new SequenceCount(theStationCode, theDate, item.Item1));
+                theDate = DateTime.ParseExact(item.Item2.ToString(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+
+                Sequences.Add(new SequenceCount(theStationCode, theDate, item.Item3, item.Item4));
             }
 
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
+        internal string getSeqCountInitSQL()
+        {
+            string SQL = @"";
+            string SELECT = "SELECT ";
+            string FROM = " FROM " + OracleAttributeHelper.GetIndexTable<SequenceCount>("Line_1_CARTYPE");
+            string ORDERBY = " ORDER BY " + OracleAttributeHelper.GetIndexColumns<SequenceCount>("Line_1_CARTYPE")[1] + " ASC";
+
+            List<string> theStrings = OracleAttributeHelper.GetIndexColumns<SequenceCount>("Line_1_CARTYPE");
+
+            foreach(string theString in theStrings)
+            {
+                if(theString != theStrings.First())
+                {
+                    SELECT += ", ";
+                }
+
+                SELECT += theString;
+            }
+
+            SQL += SELECT + FROM + ORDERBY;
+
+            return SQL;
+        }
         internal string getSQL()
         {   
             string START_DATE = convertDate(filter.startDate);
@@ -113,12 +143,13 @@ namespace SequenceTracker
 
             string SQL = @"";
 
-            string SELECT = " SELECT Count(" + OracleAttributeHelper.GetColumnName<SequenceCount>("Count") + ") as Count, " + OracleAttributeHelper.GetColumnName<SequenceCount>("Count");
+            string SELECT = " SELECT " + OracleAttributeHelper.GetColumnName<SequenceCount>("Date") + ", " + OracleAttributeHelper.GetColumnName<SequenceCount>("Count") + ", " + "Count( * ) as COUNT";
             string FROM = " FROM " + OracleAttributeHelper.GetTableName<SequenceCount>();
             string WHERE = " WHERE " + DATE;
-            string GROUPBY = " GROUP BY " + OracleAttributeHelper.GetColumnName<SequenceCount>("Count");
+            string GROUPBY = " GROUP BY " + OracleAttributeHelper.GetColumnName<SequenceCount>("Date") + ", " + OracleAttributeHelper.GetColumnName<SequenceCount>("Count");
+            string ORDERBY = " ORDER BY " + OracleAttributeHelper.GetColumnName<SequenceCount>("Date") + " DESC";
 
-            SQL += SELECT + FROM + WHERE + GROUPBY;
+            SQL += SELECT + FROM + WHERE + GROUPBY + ORDERBY;
 
             return SQL;
         }
@@ -142,31 +173,130 @@ namespace SequenceTracker
                                 .OrderByDescending(seq => seq.Date)
                                 .ToList();
 
-            var result = line1
+
+            var line1_cartype1 = line1.Where(seq => seq.CarType == AppConstants.CarTypes_Line_1[1])
+                                        .OrderByDescending(seq => seq.Date)
+                                        .ToList();
+            var line1_cartype2 = line1.Where(seq => seq.CarType == AppConstants.CarTypes_Line_1[2])
+                                        .OrderByDescending(seq => seq.Date)
+                                        .ToList();
+            var line1_cartype3 = line1.Where(seq => seq.CarType == AppConstants.CarTypes_Line_1[3])
+                                        .OrderByDescending(seq => seq.Date)
+                                        .ToList();
+
+            var line2_cartype1 = line2.Where(seq => seq.CarType == AppConstants.CarTypes_Line_2[1])
+                                       .OrderByDescending(seq => seq.Date)
+                                       .ToList();
+            var line2_cartype2 = line2.Where(seq => seq.CarType == AppConstants.CarTypes_Line_2[2])
+                                        .OrderByDescending(seq => seq.Date)
+                                        .ToList();
+            var line2_cartype3 = line2.Where(seq => seq.CarType == AppConstants.CarTypes_Line_2[3])
+                                        .OrderByDescending(seq => seq.Date)
+                                        .ToList();
+
+            var result = line1_cartype1
 
             .Select(x => new
             {
                 Date = x.Date,
-                Line1 = (int?)x.Count,
-                Line2 = (int?)null
+                Line1_Car1 = (int?)x.Count,
+                Line1_Car2 = (int?)null,
+                Line1_Car3 = (int?)null,
+                Line2_Car1 = (int?)null,
+                Line2_Car2 = (int?)null,
+                Line2_Car3 = (int?)null
             })
-            .Concat(line2.Select(x => new
+            .Concat(line1_cartype2.Select(x => new
             {
                 Date = x.Date,
-                Line1 = (int?)null,
-                Line2 = (int?)x.Count
+                Line1_Car1 = (int?)null,
+                Line1_Car2 = (int?)x.Count,
+                Line1_Car3 = (int?)null,
+                Line2_Car1 = (int?)null,
+                Line2_Car2 = (int?)null,
+                Line2_Car3 = (int?)null
+            }))
+            .Concat(line1_cartype3.Select(x => new
+            {
+                Date = x.Date,
+                Line1_Car1 = (int?)null,
+                Line1_Car2 = (int?)null,
+                Line1_Car3 = (int?)x.Count,
+                Line2_Car1 = (int?)null,
+                Line2_Car2 = (int?)null,
+                Line2_Car3 = (int?)null
+            }))
+            .Concat(line2_cartype1.Select(x => new
+            {
+                Date = x.Date,
+                Line1_Car1 = (int?)null,
+                Line1_Car2 = (int?)null,
+                Line1_Car3 = (int?)null,
+                Line2_Car1 = (int?)x.Count,
+                Line2_Car2 = (int?)null,
+                Line2_Car3 = (int?)null
+            }))
+            .Concat(line2_cartype2.Select(x => new
+            {
+                Date = x.Date,
+                Line1_Car1 = (int?)null,
+                Line1_Car2 = (int?)null,
+                Line1_Car3 = (int?)null,
+                Line2_Car1 = (int?)null,
+                Line2_Car2 = (int?)x.Count,
+                Line2_Car3 = (int?)null
+            }))
+            .Concat(line2_cartype3.Select(x => new
+            {
+                Date = x.Date,
+                Line1_Car1 = (int?)null,
+                Line1_Car2 = (int?)null,
+                Line1_Car3 = (int?)null,
+                Line2_Car1 = (int?)null,
+                Line2_Car2 = (int?)null,
+                Line2_Car3 = (int?)x.Count
             }))
             .GroupBy(x => x.Date)
             .Select(g => new SequenceCountResult
             {
                 Date = g.Key,
-                Line1 = g.FirstOrDefault(x => x.Line1.HasValue)?.Line1,
-                Line2 = g.FirstOrDefault(x => x.Line2.HasValue)?.Line2
+                Line1_CarType_1 = g.FirstOrDefault(x => x.Line1_Car1.HasValue)?.Line1_Car1,
+                Line1_CarType_2 = g.FirstOrDefault(x => x.Line1_Car2.HasValue)?.Line1_Car2,
+                Line1_CarType_3 = g.FirstOrDefault(x => x.Line1_Car3.HasValue)?.Line1_Car3,
+                Line2_CarType_1 = g.FirstOrDefault(x => x.Line2_Car1.HasValue)?.Line2_Car1,
+                Line2_CarType_2 = g.FirstOrDefault(x => x.Line2_Car2.HasValue)?.Line2_Car2,
+                Line2_CarType_3 = g.FirstOrDefault(x => x.Line2_Car3.HasValue)?.Line2_Car3,
             })
             .OrderByDescending(x => x.Date)
             .ToList();
 
             return result;
+        }
+
+        internal bool hasProdDate(DateTime theDate)
+        {
+            bool hasDate = false;
+
+            foreach(SequenceCount count in Sequences)
+            {
+                if(count.Date == theDate)
+                {
+                    hasDate = true;
+                    break;
+                }
+            }
+            return hasDate;
+        }
+
+        internal void addSequence(DateTime theDate, string theStationCode, string theCarType, int Count)
+        {
+            foreach (SequenceCount count in Sequences)
+            {
+                if (count.Date == theDate)
+                {
+                    break;
+                }
+            }
         }
     }
 }
