@@ -75,6 +75,12 @@ namespace SequenceTracker
         public static readonly Dictionary<string, string> dgvHeader = new Dictionary<string, string>()
         {
         };
+
+        public static readonly Dictionary<string,int> ProductionTime = new Dictionary<string, int>()
+        {
+            { "PRODUCTION_START", 6},
+            { "PRODUCTION_END", 25}
+        };
     }
 
     //Enumerators

@@ -38,6 +38,43 @@ namespace SequenceTracker
 
             model = MODEL.TABLE;
         }
+        //Methods
+        //-------------------------------------------
+        internal bool isSameFilter(Filter compareFilter)
+        {
+            bool isSame = true;
+
+            if (compareFilter == null)
+            {
+                return false;
+            }
+
+            if (this.startDate != compareFilter.startDate ||
+                this.endDate != compareFilter.endDate ||
+                this.LINE_1 != compareFilter.LINE_1 ||
+                this.LINE_2 != compareFilter.LINE_2 ||
+                this.model != compareFilter.model
+                )
+            {
+                isSame = false;
+            }
+
+            return isSame;
+        }
+
+        internal void setFilter(Filter targetFilter)
+        {
+            if (targetFilter == null)
+            {
+                return;
+            }
+
+            this.startDate = targetFilter.startDate;
+            this.endDate = targetFilter.endDate;
+            this.LINE_1 = targetFilter.LINE_1;
+            this.LINE_2 = targetFilter.LINE_2;
+            this.model = targetFilter.model;
+        }
     }
 
     internal enum MODEL

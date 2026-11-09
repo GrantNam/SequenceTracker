@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.CodeDom;
 
 
 namespace SequenceTracker
@@ -21,6 +22,13 @@ namespace SequenceTracker
         //Fields
         //--------------------------------------------------
         internal int MouseHoverIndex = -1;
+        internal DailyDetailWindow dailyDetailWindow;
+        //Flags
+        //--------------------------------------------------
+        internal static bool detailWindow = false;
+        internal static bool DGV_OPEN = false;
+        internal static bool BAR_GRAPH_OPEN = false;
+        internal static bool TREND_GRAPH_OPEN = false;
 
         //Events
         //---------------------------------------------------
@@ -49,8 +57,18 @@ namespace SequenceTracker
                 return;
             }
 
-            DailyDetailWindow dailyDetailwindow = new DailyDetailWindow(dataManager);
-            dailyDetailwindow.Show();
+            if(detailWindow)
+            {
+                dailyDetailWindow.CreateTABLE(dataManager);
+                dailyDetailWindow.Invalidate();
+            }
+            else
+            {
+                DailyDetailWindow thewindow = new DailyDetailWindow(dataManager);
+                detailWindow = true;
+                dailyDetailWindow = thewindow;
+                dailyDetailWindow.Show();
+            }
         }
         internal void OnDataUpdated(object sender, EventArgs e)
         {
@@ -162,6 +180,28 @@ namespace SequenceTracker
                 if (closeRect.Contains(e.Location))
                 {
                     TabPage page = mainTab.TabPages[i];
+
+                    if (mainTab.TabPages[i].Controls.OfType<DataGridView_DB>().Any())
+                    {
+                        DGV_OPEN = false;
+                    }
+
+                    if (mainTab.TabPages[i].Controls.OfType<Chart>().Any())
+                    {
+                        Chart tempChart = mainTab.TabPages[i].Controls.OfType<Chart>().FirstOrDefault();
+                        
+                        foreach(Series series in tempChart.Series)
+                        {
+                            if(series.ChartType is SeriesChartType.Column)
+                            {
+                                BAR_GRAPH_OPEN = false;
+                            }
+                            else if (series.ChartType is SeriesChartType.Line)
+                            {
+                                TREND_GRAPH_OPEN = false;
+                            }
+                        }
+                    }
 
                     mainTab.TabPages.Remove(page);
                     page.Dispose();
@@ -304,12 +344,73 @@ namespace SequenceTracker
             newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
-            mainTab.TabPages.Add(newPage);
-            mainTab.SelectedTab = newPage;
+
+            if(DGV_OPEN)
+            {   
+                foreach(TabPage tabPage in mainTab.TabPages)
+                {
+                    if (tabPage.Controls.OfType<DataGridView_DB>().Any())
+                    {
+                        tabPage.Controls.Clear();
+                        tabPage.Controls.Add(dgvSeqCount);
+                        tabPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+                        tabPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+                        mainTab.SelectedTab = tabPage;
+                    }
+                }
+               
+            }
+            else
+            {
+                mainTab.TabPages.Add(newPage);
+                mainTab.SelectedTab = newPage;
+                DGV_OPEN = true;
+            }
         }
 
         internal void CreateGRAPH(DataManager dataManager)
         {
+            Filter BAR_Filter = null;
+            Filter TREND_Filter = null;
+            TabPage BAR_TabPage = null;
+            TabPage TREND_TabPage = null;
+
+            foreach(TabPage tabPage in mainTab.TabPages)
+            {
+                Chart tempChart = tabPage.Controls.OfType<Chart>().FirstOrDefault();
+
+                if (tempChart == null)
+                {
+                    continue;
+                }
+
+                foreach (Series series in tempChart.Series)
+                {
+                    if (series.ChartType is SeriesChartType.Column)
+                    {
+                        BAR_Filter = new Filter();
+                        BAR_Filter.setFilter((Filter)tabPage.Tag);
+                        BAR_TabPage = tabPage;
+                    }
+                    else if (series.ChartType is SeriesChartType.Line)
+                    {
+                        TREND_Filter = new Filter();
+                        TREND_Filter.setFilter((Filter)tabPage.Tag);
+                        TREND_TabPage = tabPage;
+                    }
+                }
+            }
+
+            if (DataManager.filter.model == MODEL.BAR_GRAPH && DataManager.filter.isSameFilter(BAR_Filter))
+            {
+                Console.WriteLine("Same BAR Filter");
+                return;
+            }
+            if (DataManager.filter.model == MODEL.TREND_GRAPH && DataManager.filter.isSameFilter(TREND_Filter))
+            {
+                Console.WriteLine("Same TREND Filter");
+                return;
+            }
 
             var filteredData = dataManager.GetFilteredData(dataManager.Sequences);
 
@@ -388,8 +489,43 @@ namespace SequenceTracker
             newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
-            mainTab.TabPages.Add(newPage);
-            mainTab.SelectedTab = newPage;
+            if (DataManager.filter.model == MODEL.BAR_GRAPH && BAR_GRAPH_OPEN)
+            {
+                if (BAR_TabPage != null)
+                {   
+                    BAR_TabPage.Controls.Clear();
+                    BAR_TabPage.Controls.Add(chart);
+                    BAR_TabPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+                    BAR_TabPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+                    mainTab.SelectedTab = BAR_TabPage;
+                }
+            }
+            else if(DataManager.filter.model == MODEL.BAR_GRAPH && !BAR_GRAPH_OPEN)
+            {
+                mainTab.TabPages.Add(newPage);
+                mainTab.SelectedTab = newPage;
+                BAR_GRAPH_OPEN = true;
+            }
+            else if (DataManager.filter.model == MODEL.TREND_GRAPH && TREND_GRAPH_OPEN)
+            {
+                if (TREND_TabPage != null)
+                {
+                    TREND_TabPage.Controls.Clear();
+                    TREND_TabPage.Controls.Add(chart);
+                    TREND_TabPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+                    TREND_TabPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
+                    mainTab.SelectedTab = TREND_TabPage;
+                }
+            }
+            else if (DataManager.filter.model == MODEL.TREND_GRAPH && !TREND_GRAPH_OPEN)
+            {
+                mainTab.TabPages.Add(newPage);
+                mainTab.SelectedTab = newPage;
+                TREND_GRAPH_OPEN = true;
+            }
+            Filter tagFilter = new Filter();
+            tagFilter.setFilter(DataManager.filter);
+            mainTab.SelectedTab.Tag = tagFilter;
         }
 
         /*

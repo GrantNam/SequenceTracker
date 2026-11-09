@@ -20,8 +20,8 @@ namespace SequenceTracker
 
         //Fields
         //---------------------------------------------
-        SearchBar searchBar1;
-        DisplayPanel displayPanel;
+        internal SearchBar searchBar1;
+        internal DisplayPanel displayPanel;
         //Events
         //---------------------------------------------
         internal event EventHandler DataUpdated;

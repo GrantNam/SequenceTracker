@@ -16,8 +16,15 @@ namespace SequenceTracker
     {
         //Managers
         //-------------------------------------------------------
-        DataManager dataManager;
+        internal DataManager dataManager;
 
+        //Event Handlers
+        //-------------------------------------------------------
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            CleanUp();
+            base.OnFormClosed(e);
+        }
         //Constructors
         //--------------------------------------------------------------------------
         public DailyDetailWindow()
@@ -33,6 +40,12 @@ namespace SequenceTracker
 
         //Methods
         //------------------------------------------------------------------------
+        internal void CleanUp()
+        {
+            DisplayPanel.detailWindow = false;
+        }
+
+        
         internal void CreateTABLE(DataManager dataManager)
         {
             DataGridView_DB dgvSeqCount = new DataGridView_DB();
@@ -82,12 +95,77 @@ namespace SequenceTracker
             int? line2_car2 = 0;
             int? line2_car3 = 0;
 
-            int rowIndex = 0;
+            int hour = AppConstants.ProductionTime["PRODUCTION_START"];
+            int indexOffset = AppConstants.ProductionTime["PRODUCTION_START"];
+
+            while (hour < AppConstants.ProductionTime["PRODUCTION_END"])
+            {
+                dgvSeqCount.Rows.Add
+                (
+                    ((hour)%24).ToString("D2") + ":00 - " + ((hour)%24+1).ToString("D2") + ":00",
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                );
+                hour++;
+            }
 
             foreach (var item in filteredData)
             {
+                int index = 0;
+
+                if(item.Date.Hour < AppConstants.ProductionTime["PRODUCTION_START"])
+                {
+                    index = item.Date.Hour - indexOffset + 24;
+                }
+                else
+                {
+                    index = item.Date.Hour - indexOffset;
+                }
+                
+                //dgvSeqCount.Rows[item.Date.Hour].Cells["TIME"].Value = item.Line1_CarType_1;
+                if(item.Line1_CarType_1 != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_CARTYPE_1"].Value = item.Line1_CarType_1;
+                }
+                if (item.Line1_CarType_2 != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_CARTYPE_2"].Value = item.Line1_CarType_2;
+                }
+
+                if (item.Line1_CarType_3 != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_CARTYPE_3"].Value = item.Line1_CarType_3;
+                }
+                if (item.getLine1Total() != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_Total"].Value = item.getLine1Total();
+                }
+                if (item.Line2_CarType_1 != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_CARTYPE_1"].Value = item.Line2_CarType_1;
+                }
+                if (item.Line2_CarType_2 != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_CARTYPE_2"].Value = item.Line2_CarType_2;
+                }
+                if (item.Line2_CarType_3 != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_CARTYPE_3"].Value = item.Line2_CarType_3;
+                }
+                if (item.getLine2Total() != null)
+                {
+                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_Total"].Value = item.getLine2Total();
+                }
+
+                /*
                 rowIndex = dgvSeqCount.Rows.Add
-                (
+                (   
                     (item.Date.ToString("HH") + ":00 - " + item.Date.AddHours(1).ToString("HH") + ":00"),
                     item.Line1_CarType_1,
                     item.Line1_CarType_2,
@@ -98,8 +176,9 @@ namespace SequenceTracker
                     item.Line2_CarType_3,
                     item.getLine2Total()
                 );
+                */
 
-                dgvSeqCount.Rows[rowIndex].Tag = item;
+                dgvSeqCount.Rows[index].Tag = item;
 
                 line1_car1 += item.Line1_CarType_1;
                 line1_car2 += item.Line1_CarType_2;
@@ -108,6 +187,7 @@ namespace SequenceTracker
                 line2_car2 += item.Line2_CarType_2;
                 line2_car3 += item.Line2_CarType_3;
             }
+
             int? line1_total = line1_car1 + line1_car2 + line1_car3;
             int? line2_total = line2_car1 + line2_car2 + line2_car3;
 
@@ -139,6 +219,7 @@ namespace SequenceTracker
             DataGridViewRow row = dgvSeqCount.Rows[0];
             row.DefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
 
+            mainPanel.Controls.Clear();
             mainPanel.Controls.Add(dgvSeqCount);
         }
     }

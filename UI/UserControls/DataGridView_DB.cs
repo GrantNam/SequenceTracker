@@ -19,6 +19,12 @@ namespace SequenceTracker
 
         //Event Handlers
         //-------------------------------------------------------
+        protected override void OnControlRemoved(ControlEventArgs e)
+        {
+            DisplayPanel.DGV_OPEN = false;
+
+            base.OnControlRemoved(e);
+        }
         internal void OnRowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             Console.WriteLine("Header Double Clicked");
