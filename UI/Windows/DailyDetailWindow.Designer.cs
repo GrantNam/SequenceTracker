@@ -53,6 +53,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Panel mainPanel;
+        internal System.Windows.Forms.Panel mainPanel;
     }
 }

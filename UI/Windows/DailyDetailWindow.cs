@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,6 +19,10 @@ namespace SequenceTracker
         //-------------------------------------------------------
         internal DataManager dataManager;
 
+        //Fields
+        //-------------------------------------------------------
+        internal readonly int PRODDATE = 0;
+
         //Event Handlers
         //-------------------------------------------------------
         protected override void OnFormClosed(FormClosedEventArgs e)
@@ -25,28 +30,35 @@ namespace SequenceTracker
             CleanUp();
             base.OnFormClosed(e);
         }
+        
         //Constructors
         //--------------------------------------------------------------------------
         public DailyDetailWindow()
         {
             InitializeComponent();
         }
-        internal DailyDetailWindow(DataManager theManager): this()
+        internal DailyDetailWindow(DataManager theManager, int ProdDate): this()
         {   
             dataManager = theManager;
-            CreateTABLE(theManager);
+            PRODDATE = ProdDate;
+            CreateDGV(theManager);
         }
 
 
         //Methods
         //------------------------------------------------------------------------
+        internal int getPRODDATE()
+        {
+            return PRODDATE;
+        }
+
         internal void CleanUp()
         {
             DisplayPanel.detailWindow = false;
         }
-
         
-        internal void CreateTABLE(DataManager dataManager)
+
+        internal void CreateDGV(DataManager dataManager)
         {
             DataGridView_DB dgvSeqCount = new DataGridView_DB();
 
@@ -56,171 +68,84 @@ namespace SequenceTracker
             dgvSeqCount.AllowUserToDeleteRows = false;
             dgvSeqCount.ReadOnly = true;
             dgvSeqCount.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvSeqCount.AutoGenerateColumns = true;
+            dgvSeqCount.BindingContext = new BindingContext();
 
             //Configure Column Header Style
             dgvSeqCount.EnableHeadersVisualStyles = false;
 
             dgvSeqCount.ColumnHeadersDefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
 
-            //Create Columns
-            dgvSeqCount.Columns.Add("TIME", "TIME");
+            InitTable();
 
-            //if (DataManager.filter.LINE_1)
-            {
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_1", AppConstants.CarTypes_Line_1[1] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_2", AppConstants.CarTypes_Line_1[2] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_3", AppConstants.CarTypes_Line_1[3] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_Total", "Total [Line 1]");
-            }
+            DataView TagView = new DataView(dataManager.HourlyDGV_DataTable);
 
-            //if (DataManager.filter.LINE_2)
-            {
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_1", AppConstants.CarTypes_Line_2[1] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_2", AppConstants.CarTypes_Line_2[2] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_3", AppConstants.CarTypes_Line_2[3] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_Total", "Total [Line 2]");
-            }
+            TagView.Sort = "TIMESTAMP ASC";
 
-            //Create Rows
-            var filteredData = dataManager.GetFilteredData(dataManager.DailySequences);
+            dgvSeqCount.DataSource = TagView;
 
-            filteredData = filteredData
-                            .OrderBy(x => x.Date)
-                            .ToList();
-
-            int? line1_car1 = 0;
-            int? line1_car2 = 0;
-            int? line1_car3 = 0;
-            int? line2_car1 = 0;
-            int? line2_car2 = 0;
-            int? line2_car3 = 0;
-
-            int hour = AppConstants.ProductionTime["PRODUCTION_START"];
-            int indexOffset = AppConstants.ProductionTime["PRODUCTION_START"];
-
-            while (hour < AppConstants.ProductionTime["PRODUCTION_END"])
-            {
-                dgvSeqCount.Rows.Add
-                (
-                    ((hour)%24).ToString("D2") + ":00 - " + ((hour)%24+1).ToString("D2") + ":00",
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                );
-                hour++;
-            }
-
-            foreach (var item in filteredData)
-            {
-                int index = 0;
-
-                if(item.Date.Hour < AppConstants.ProductionTime["PRODUCTION_START"])
-                {
-                    index = item.Date.Hour - indexOffset + 24;
-                }
-                else
-                {
-                    index = item.Date.Hour - indexOffset;
-                }
-                
-                //dgvSeqCount.Rows[item.Date.Hour].Cells["TIME"].Value = item.Line1_CarType_1;
-                if(item.Line1_CarType_1 != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_CARTYPE_1"].Value = item.Line1_CarType_1;
-                }
-                if (item.Line1_CarType_2 != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_CARTYPE_2"].Value = item.Line1_CarType_2;
-                }
-
-                if (item.Line1_CarType_3 != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_CARTYPE_3"].Value = item.Line1_CarType_3;
-                }
-                if (item.getLine1Total() != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_1_Total"].Value = item.getLine1Total();
-                }
-                if (item.Line2_CarType_1 != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_CARTYPE_1"].Value = item.Line2_CarType_1;
-                }
-                if (item.Line2_CarType_2 != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_CARTYPE_2"].Value = item.Line2_CarType_2;
-                }
-                if (item.Line2_CarType_3 != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_CARTYPE_3"].Value = item.Line2_CarType_3;
-                }
-                if (item.getLine2Total() != null)
-                {
-                    dgvSeqCount.Rows[index].Cells["COUNT_LINE_2_Total"].Value = item.getLine2Total();
-                }
-
-                /*
-                rowIndex = dgvSeqCount.Rows.Add
-                (   
-                    (item.Date.ToString("HH") + ":00 - " + item.Date.AddHours(1).ToString("HH") + ":00"),
-                    item.Line1_CarType_1,
-                    item.Line1_CarType_2,
-                    item.Line1_CarType_3,
-                    item.getLine1Total(),
-                    item.Line2_CarType_1,
-                    item.Line2_CarType_2,
-                    item.Line2_CarType_3,
-                    item.getLine2Total()
-                );
-                */
-
-                dgvSeqCount.Rows[index].Tag = item;
-
-                line1_car1 += item.Line1_CarType_1;
-                line1_car2 += item.Line1_CarType_2;
-                line1_car3 += item.Line1_CarType_3;
-                line2_car1 += item.Line2_CarType_1;
-                line2_car2 += item.Line2_CarType_2;
-                line2_car3 += item.Line2_CarType_3;
-            }
-
-            int? line1_total = line1_car1 + line1_car2 + line1_car3;
-            int? line2_total = line2_car1 + line2_car2 + line2_car3;
-
-            string DATE = filteredData.FirstOrDefault().Date.ToString("yyyy-MM-dd");
-            string LINE1_CAR1 = "Total [" + line1_car1.ToString() + "]";
-            string LINE1_CAR2 = "Total [" + line1_car2.ToString() + "]";
-            string LINE1_CAR3 = "Total [" + line1_car3.ToString() + "]";
-            string LINE1_TOTAL = "Total [" + line1_total.ToString() + "]";
-            string LINE2_CAR1 = "Total [" + line2_car1.ToString() + "]";
-            string LINE2_CAR2 = "Total [" + line2_car2.ToString() + "]";
-            string LINE2_CAR3 = "Total [" + line2_car3.ToString() + "]";
-            string LINE2_TOTAL = "Total [" + line2_total.ToString() + "]";
-
-
-            dgvSeqCount.Rows.Insert(0,DATE, LINE1_CAR1, LINE1_CAR2, LINE1_CAR3, LINE1_TOTAL, LINE2_CAR1, LINE2_CAR2, LINE2_CAR3, LINE2_TOTAL);
-
-
-
-            dgvSeqCount.Columns["TIME"].Visible = DataManager.filter.LINE_1 || DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_1"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_2"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_3"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_1_Total"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_1"].Visible = DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_2"].Visible = DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_3"].Visible = DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_2_Total"].Visible = DataManager.filter.LINE_2;
-
-            DataGridViewRow row = dgvSeqCount.Rows[0];
-            row.DefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
+            dgvSeqCount.Columns["TIMESTAMP"].Visible = false;
+            dgvSeqCount.Columns["PRODDATE"].Visible = false;
+            dgvSeqCount.Columns["LINE_1_CARTYPE_1"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_1_CARTYPE_2"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_1_CARTYPE_3"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_1_Total"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_2_CARTYPE_1"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["LINE_2_CARTYPE_2"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["LINE_2_CARTYPE_3"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["LINE_2_Total"].Visible = DataManager.filter.LINE_2;
 
             mainPanel.Controls.Clear();
             mainPanel.Controls.Add(dgvSeqCount);
+        }
+
+        internal void InitTable()
+        {
+            dataManager.HourlyDGV_DataTable = dataManager.HourlySequenceCountRepo.dataTable.Copy();
+
+            int CurrentTime = int.Parse(DateTime.Now.ToString("yyyyMMddHH"));
+
+            for(int i = AppConstants.ProductionTime["PRODUCTION_START"]; i < AppConstants.ProductionTime["PRODUCTION_END"]; i++)
+            {
+                int hour = 0;
+                int Date = 0;
+                bool TIMESTAMP_FOUND = false;
+
+                foreach (DataRow row in dataManager.HourlyDGV_DataTable.Rows)
+                {
+                    hour = int.Parse(row["TIMESTAMP"].ToString().Substring(8, 2));
+                    Date = int.Parse(row["TIMESTAMP"].ToString().Substring(0, 8));
+
+                    if(CurrentTime <= (Date * 100 + hour))
+                    {
+                        goto ENDLOOP;
+                    }
+
+                    if (hour == i)
+                    {
+                        TIMESTAMP_FOUND = true;
+                        break;
+                    }
+                }
+
+                if (!TIMESTAMP_FOUND)
+                {
+                    DataRow theRow = dataManager.HourlyDGV_DataTable.NewRow();
+                    theRow["TIMESTAMP"] = (Convert.ToInt32(dataManager.HourlyDGV_DataTable.Rows[0]["PRODDATE"]) + (i/24)) * 100 + (i%24);
+                    theRow["PRODDATE"] = Convert.ToInt32(dataManager.HourlyDGV_DataTable.Rows[0]["PRODDATE"]);
+                    dataManager.HourlyDGV_DataTable.Rows.Add(theRow);
+                }
+            }
+
+            ENDLOOP:
+
+            foreach(DataRow row in dataManager.HourlyDGV_DataTable.Rows)
+            {
+                int hour = Convert.ToInt32(row["TIMESTAMP"]) % 100;
+                row["TIME"] = (hour%24).ToString("D2") + ":00 - " + (hour + 1).ToString("D2") + ":00";
+            }
+
+            this.Name = "Date - [" + dataManager.HourlyDGV_DataTable.Rows[0]["PRODDATE"] + "]";
         }
     }
 }

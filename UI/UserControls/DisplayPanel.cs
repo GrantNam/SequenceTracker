@@ -7,17 +7,18 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.CodeDom;
+using System.Data;
 
 
 namespace SequenceTracker
 {
-    internal class DisplayPanel : UserControl
+    internal partial class DisplayPanel : UserControl
     {
         //Managers
         //--------------------------------------------------
         internal MainWindow mainWindow;
         internal DataManager dataManager;
-        private TabControl mainTab;
+        internal TabControl mainTab;
 
         //Fields
         //--------------------------------------------------
@@ -45,6 +46,8 @@ namespace SequenceTracker
         }
         //Event Handlers
         //---------------------------------------------------
+       
+
         internal void OnRowDataUpdated(object sender, EventArgs e)
         {
             if (this.InvokeRequired)
@@ -59,17 +62,28 @@ namespace SequenceTracker
 
             if(detailWindow)
             {
-                dailyDetailWindow.CreateTABLE(dataManager);
+                dailyDetailWindow.CreateDGV(dataManager);
                 dailyDetailWindow.Invalidate();
             }
             else
             {
-                DailyDetailWindow thewindow = new DailyDetailWindow(dataManager);
+                int ProdDate = 0;
+
+                for (int i = 0; i < dataManager.HourlySequenceCountRepo.dataTable.Rows.Count; i++)
+                {
+                    if (dataManager.HourlySequenceCountRepo.dataTable.Rows[i]["TIMESTAMP"] != null)
+                    {
+                        ProdDate = Convert.ToInt32(dataManager.HourlySequenceCountRepo.dataTable.Rows[i]["TIMESTAMP"]) / 100;
+                    }
+                }
+
+                DailyDetailWindow thewindow = new DailyDetailWindow(dataManager, ProdDate);
                 detailWindow = true;
                 dailyDetailWindow = thewindow;
                 dailyDetailWindow.Show();
             }
         }
+
         internal void OnDataUpdated(object sender, EventArgs e)
         {
             if (this.InvokeRequired)
@@ -275,6 +289,24 @@ namespace SequenceTracker
 
         internal void CreateTABLE(DataManager dataManager)
         {
+
+            if (DGV_OPEN)
+            {
+                foreach(TabPage tabPage in mainTab.Controls)
+                {
+                    foreach(Control control in tabPage.Controls)
+                    {
+                        if(control.GetType() == typeof(DataGridView_DB))
+                        {
+                            if (DataManager.filter.compareFilter((Filter)tabPage.Tag))
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
             DataGridView_DB dgvSeqCount = new DataGridView_DB(mainWindow);
 
             //Configurint Table
@@ -284,66 +316,55 @@ namespace SequenceTracker
             dgvSeqCount.ReadOnly = true;
             dgvSeqCount.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-            //Configure Column Header Style
-            dgvSeqCount.EnableHeadersVisualStyles = false;
-
             dgvSeqCount.ColumnHeadersDefaultCellStyle.Font = AppConstants.Fonts["TABLE_HEADER"];
 
-            //Create Columns
-            dgvSeqCount.Columns.Add("Date", "Date");
-
-            //if (DataManager.filter.LINE_1)
-            {
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_1", AppConstants.CarTypes_Line_1[1] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_2", AppConstants.CarTypes_Line_1[2] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_CARTYPE_3", AppConstants.CarTypes_Line_1[3] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_1_Total", "Total [Line 1]");
-            }
-
-            //if (DataManager.filter.LINE_2)
-            {
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_1", AppConstants.CarTypes_Line_2[1] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_2", AppConstants.CarTypes_Line_2[2] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_CARTYPE_3", AppConstants.CarTypes_Line_2[3] + " - Count");
-                dgvSeqCount.Columns.Add("COUNT_LINE_2_Total", "Total [Line 2]");
-            }
-
-            //Create Rows
-            var filteredData = dataManager.GetFilteredData(dataManager.Sequences);
-
-            foreach(var item in filteredData)
-            {
-                int rowIndex = dgvSeqCount.Rows.Add
-                (
-                    item.Date.ToString("yyyy-MM-dd"), 
-                    item.Line1_CarType_1, 
-                    item.Line1_CarType_2, 
-                    item.Line1_CarType_3, 
-                    item.getLine1Total(),
-                    item.Line2_CarType_1,
-                    item.Line2_CarType_2,
-                    item.Line2_CarType_3,
-                    item.getLine2Total()
-                );
-
-                dgvSeqCount.Rows[rowIndex].Tag = item;
-            }
-
-            dgvSeqCount.Columns["Date"].Visible = DataManager.filter.LINE_1 || DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_1"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_2"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_1_CARTYPE_3"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_1_Total"].Visible = DataManager.filter.LINE_1;
-            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_1"].Visible = DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_2"].Visible = DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_2_CARTYPE_3"].Visible = DataManager.filter.LINE_2;
-            dgvSeqCount.Columns["COUNT_LINE_2_Total"].Visible = DataManager.filter.LINE_2;
-
             TabPage newPage = new TabPage();
+            dataManager.DGV_DataTable = dataManager.DailySequenceCountRepo.dataTable.Copy();
+
+            Filter tagFilter = new Filter();
+            tagFilter.setFilter(DataManager.filter);
+
+            newPage.Tag = tagFilter;
             newPage.Controls.Add(dgvSeqCount);
             newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 
+            dgvSeqCount.AutoGenerateColumns = true;
+            dgvSeqCount.BindingContext = new BindingContext();
+
+            DataView TagView = new DataView(dataManager.DGV_DataTable);
+            TagView.Sort = "PRODDATE DESC";
+
+            dgvSeqCount.DataSource = TagView;
+
+            foreach(DataGridViewColumn column in dgvSeqCount.Columns)
+            {
+                string line = column.Name.Substring(0, 6);
+                string cartype = column.Name.Substring((column.Name.Length - 1), 1);
+
+                if(line == "LINE_1")
+                {
+                    if(cartype == "1") { column.HeaderText = "[LINE_1]_" + DailySequenceCountRepository.LINE_1_CARTYPE_INDEX[0]; }
+                    if (cartype == "2") { column.HeaderText = "[LINE_1]_" + DailySequenceCountRepository.LINE_1_CARTYPE_INDEX[1]; }
+                    if (cartype == "3") { column.HeaderText = "[LINE_1]_" + DailySequenceCountRepository.LINE_1_CARTYPE_INDEX[2]; }
+                }
+                if (line == "LINE_2")
+                {
+                    if (cartype == "1") { column.HeaderText = "[LINE_2]_" + DailySequenceCountRepository.LINE_2_CARTYPE_INDEX[0]; }
+                    if (cartype == "2") { column.HeaderText = "[LINE_2]_" + DailySequenceCountRepository.LINE_2_CARTYPE_INDEX[1]; }
+                    if (cartype == "3") { column.HeaderText = "[LINE_2]_" + DailySequenceCountRepository.LINE_2_CARTYPE_INDEX[2]; }
+                }
+            }
+
+            dgvSeqCount.Columns["TIMESTAMP"].Visible = false;
+            dgvSeqCount.Columns["LINE_1_CARTYPE_1"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_1_CARTYPE_2"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_1_CARTYPE_3"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_1_Total"].Visible = DataManager.filter.LINE_1;
+            dgvSeqCount.Columns["LINE_2_CARTYPE_1"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["LINE_2_CARTYPE_2"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["LINE_2_CARTYPE_3"].Visible = DataManager.filter.LINE_2;
+            dgvSeqCount.Columns["LINE_2_Total"].Visible = DataManager.filter.LINE_2;
 
             if(DGV_OPEN)
             {   
@@ -412,7 +433,7 @@ namespace SequenceTracker
                 return;
             }
 
-            var filteredData = dataManager.GetFilteredData(dataManager.Sequences);
+            //var filteredData = dataManager.GetFilteredData(dataManager.Sequences);
 
             Chart chart = new Chart();
             chart.Dock = DockStyle.Fill;
@@ -425,7 +446,7 @@ namespace SequenceTracker
             area.AxisY.Title = "Sequence Count";
 
             area.AxisX.Interval = 1;
-            area.AxisX.IntervalType = DateTimeIntervalType.Days;
+            area.AxisX.IntervalType = DateTimeIntervalType.Auto;
             area.AxisY.Minimum = 0;
 
             area.AxisX.ScaleView.Size = 7;
@@ -435,57 +456,92 @@ namespace SequenceTracker
 
             area.AxisX.ScaleView.Zoomable = true;
 
-            Series line1 = new Series("Line 1");
-            Series line2 = new Series("Line 2");
+            Series LINE_1_CARTYPE_1 = new Series("LINE_1_CARTYPE_1");
+            Series LINE_1_CARTYPE_2 = new Series("LINE_1_CARTYPE_2");
+            Series LINE_1_CARTYPE_3 = new Series("LINE_1_CARTYPE_3");
+            Series LINE_1_TOTAL = new Series("LINE_1_TOTAL");
 
+            Series LINE_2_CARTYPE_1 = new Series("LINE_2_CARTYPE_1");
+            Series LINE_2_CARTYPE_2 = new Series("LINE_2_CARTYPE_2");
+            Series LINE_2_CARTYPE_3 = new Series("LINE_2_CARTYPE_3");
+            Series LINE_2_TOTAL = new Series("LINE_2_TOTAL");
 
-            line1.XValueType = ChartValueType.DateTime;
-            line2.XValueType = ChartValueType.DateTime;
+            List<Series> AllSeries = new List<Series>();
+
+            AllSeries.Add(LINE_1_CARTYPE_1);
+            AllSeries.Add(LINE_1_CARTYPE_2);
+            AllSeries.Add(LINE_1_CARTYPE_3);
+            AllSeries.Add(LINE_1_TOTAL);
+            AllSeries.Add(LINE_2_CARTYPE_1);
+            AllSeries.Add(LINE_2_CARTYPE_2);
+            AllSeries.Add(LINE_2_CARTYPE_3);
+            AllSeries.Add(LINE_2_TOTAL);
+
+            foreach(Series series in AllSeries)
+            {
+                series.XValueType = ChartValueType.DateTime;
+                //series.XValueMember = "PRODDATE";
+            }
+
+            DataView TagView = new DataView();
 
             if (DataManager.filter.model == MODEL.BAR_GRAPH)
             {
-                line1.ChartType = SeriesChartType.Column;
-                line2.ChartType = SeriesChartType.Column;
+                foreach (Series series in AllSeries)
+                {
+                    series.ChartType = SeriesChartType.Column;
+                }
+               
+                dataManager.BAR_GRAPH_DataTable = dataManager.DailySequenceCountRepo.dataTable.Copy();
+                TagView.Table = dataManager.BAR_GRAPH_DataTable;
+                TagView.Sort = "PRODDATE DESC";
+                chart.DataSource = TagView;
+
             }
             else if (DataManager.filter.model == MODEL.TREND_GRAPH)
             {
-
-                line1.ChartType = SeriesChartType.Line;
-                line2.ChartType = SeriesChartType.Line;
-
-                line1.BorderWidth = 3;
-                line1.MarkerStyle = MarkerStyle.Circle;
-                line1.MarkerSize = 7;
-
-                line2.BorderWidth = 3;
-                line2.MarkerStyle = MarkerStyle.Circle;
-                line2.MarkerSize = 7;
-
-
-            }
-
-                foreach (var item in filteredData.OrderBy(x => x.Date))
+                foreach (Series series in AllSeries)
                 {
-                    if (item.getLine1Total().HasValue)
-                    {
-                        line1.Points.AddXY(item.Date, item.getLine1Total().Value);
-                    }
-
-                    if (item.getLine2Total().HasValue)
-                    {
-                        line2.Points.AddXY(item.Date, item.getLine2Total().Value);
-                    }
+                    series.ChartType = SeriesChartType.Line;
+                    series.BorderWidth = 3;
+                    series.MarkerStyle = MarkerStyle.Circle;
+                    series.MarkerSize = 7;
                 }
 
-            chart.Series.Add(line1);
-            chart.Series.Add(line2);
+                dataManager.TREND_GRAPH_DataTable = dataManager.DailySequenceCountRepo.dataTable.Copy();
+                TagView.Table = dataManager.TREND_GRAPH_DataTable;
+                TagView.Sort = "PRODDATE DESC";
+                chart.DataSource = TagView;
+            }
+
+            foreach(Series series in AllSeries)
+            {
+                series.XValueMember = "PRODDATE";
+                series.YValueMembers = series.Name;
+            }
+
+            LINE_1_CARTYPE_1.Enabled = false;
+            LINE_1_CARTYPE_2.Enabled = false;
+            LINE_1_CARTYPE_3.Enabled = false;
+            LINE_1_TOTAL.Enabled = DataManager.filter.LINE_1;
+            LINE_2_CARTYPE_1.Enabled = false;
+            LINE_2_CARTYPE_2.Enabled = false;
+            LINE_2_CARTYPE_3.Enabled = false;
+            LINE_2_TOTAL.Enabled = DataManager.filter.LINE_2;
+
+            foreach (Series series in AllSeries)
+            {
+                chart.Series.Add(series);
+                Console.WriteLine("Series Name: " + series.Name);
+                series.Color = AppConstants.Colors[series.Name];
+            }
 
             area.AxisX.LabelStyle.Format = "yyyy-MM-dd";
-
             chart.Legends.Add(new Legend("Main Legend"));
 
             TabPage newPage = new TabPage();
             newPage.Controls.Add(chart);
+            newPage.Tag = TagView;
             newPage.Name = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
             newPage.Text = DataManager.filter.model.ToString() + " [" + DataManager.filter.startDate.ToString("yyyy-MM-dd") + " - " + DataManager.filter.endDate.ToString("yyyy-MM-dd") + "]";
 

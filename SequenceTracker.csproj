@@ -96,6 +96,14 @@
   <ItemGroup>
     <Compile Include="AppConstants\AppConstants.cs" />
     <Compile Include="Attribute\OracleAttributeHelper.cs" />
+    <Compile Include="DataManager\DataManager_AutoUpdate.cs" />
+    <Compile Include="DataManager\Repositories\iDataRepository.cs" />
+    <Compile Include="DataManager\Repositories\DailySequenceCountRepository.cs" />
+    <Compile Include="DataManager\Repositories\HourlySequenceCountRepository.cs" />
+    <Compile Include="EventManager\EventManager.cs" />
+    <Compile Include="UI\UserControls\DisplayPanel_AutoUpdate.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="UI\Windows\DailyDetailWindow.cs">
       <SubType>Form</SubType>
     </Compile>

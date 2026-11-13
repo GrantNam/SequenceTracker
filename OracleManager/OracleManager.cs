@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,6 +19,7 @@ namespace SequenceTracker
         //--------------------------------------------
         internal DataManager dataManager;
         internal MainWindow mainWindow;
+        internal EventManager eventManager;
 
         //Fields
         private string ConnectionString_F1;
@@ -74,7 +76,7 @@ namespace SequenceTracker
 
             while (threadRunning)
             {
-                Console.WriteLine("Thread Running...");
+                Console.WriteLine("Oracle Thread Running...");
                 while (taskQueue.TryDequeue(out task))
                 {
                     try
@@ -83,7 +85,7 @@ namespace SequenceTracker
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("[Oracle Exception]\n" + ex.Message);
                     }
                 }
 
@@ -109,6 +111,7 @@ namespace SequenceTracker
 
         //Task Enqueue
         //------------------------------------------------
+        /*
         internal void getSequenceCountInitEnqueue(string SQL, Action<List<string>, List<string>> callback)
         {   
             List<LINE> lines = new List<LINE>();
@@ -146,10 +149,34 @@ namespace SequenceTracker
 
             addTask(task);
         }
+        */
+        internal void getDataEnqueue(string SQL, OracleParameter[] parameters, List<LINE> lines, Action<DataTable> callback)
+        {
+            Action task = () =>
+            {
+                DataTable callbackData = new DataTable();
+
+                foreach (LINE line in lines)
+                {
+                    if(callbackData.Rows.Count == 0)
+                    {
+                        callbackData = getData(SQL,parameters, line);
+                    }
+                    else
+                    {
+                        callbackData.Merge(getData(SQL, parameters, line));
+                    }
+                }
+
+                callback(callbackData);
+            };
+
+            addTask(task);
+        }
 
         //Methods
         //-----------------------------------------------
-
+        /*
         internal List<string> getSequenceCountInit(string SQL, LINE line)
         {
             List<string> data = new List<string>();
@@ -193,7 +220,6 @@ namespace SequenceTracker
             return data;
         }
 
-
         //Returns List<(LINE, PRODDATE | TIME, CARTYPE, COUNT)>
         internal List<(LINE, int, string, int)> getOracleData(string SQL, LINE line)
         {
@@ -235,16 +261,63 @@ namespace SequenceTracker
 
             return data;
         }
+        */
+        internal DataTable getData(string SQL, OracleParameter[] parameters, LINE line)
+        {
+            DataTable table = new DataTable();
 
-        
-    }
-    internal enum LINE
-    {
-        FINAL_1 = 1,
-        FINAL_2 = 2,
-        TRIM_1 = 3,
-        TRIM_2 = 4,
-        DOOR_1 = 5,
-        DOOR_2 = 6
+            try
+            {
+                string ConnectionString = ConfigurationManager.ConnectionStrings[line.ToString()].ConnectionString;
+
+                using (OracleConnection connection = new OracleConnection(ConnectionString))
+                {
+
+                    using (OracleCommand command = new OracleCommand(SQL, connection))
+                    {
+                        command.BindByName = true;
+                        command.Parameters.AddRange(parameters);
+
+                        connection.Open();
+
+                        using (OracleDataReader reader = command.ExecuteReader())
+                        {
+                            int rowIndex = 0;
+
+                            while (reader.Read())
+                            {   
+                                if(rowIndex == 0)
+                                {
+                                    table.Columns.Add("LINE", typeof(LINE));
+                                    for (int i = 0; i < reader.FieldCount; i++)
+                                    {
+                                        table.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
+                                    }
+                                }
+
+                                DataRow row = table.NewRow();
+
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    row["LINE"] = line;
+                                    row[reader.GetName(i)] = reader.GetValue(i);
+                                }
+
+                                table.Rows.Add(row);
+
+                                rowIndex++;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OracleException ex)
+            {
+                Console.WriteLine($"Unexpected Error While Querrying Data");
+            }
+
+            return table;
+        }
+
     }
 }

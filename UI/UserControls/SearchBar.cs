@@ -20,7 +20,12 @@ namespace SequenceTracker
         internal DateTimePicker EndDate;
         internal DateTimePicker StartDate;
         private Panel Title_Panel;
+        internal CheckBox AutoUpdate_CheckBox;
         private Button btn_Search;
+
+        //Flags
+        //---------------------------------------------------
+        internal static bool searchRequested = false;
 
         //Events
         //---------------------------------------------------
@@ -111,6 +116,7 @@ namespace SequenceTracker
             this.EndDate = new System.Windows.Forms.DateTimePicker();
             this.StartDate = new System.Windows.Forms.DateTimePicker();
             this.Title_Panel = new System.Windows.Forms.Panel();
+            this.AutoUpdate_CheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // H1_Date
@@ -125,22 +131,20 @@ namespace SequenceTracker
             // H2_StartDate
             // 
             this.H2_StartDate.AutoSize = true;
-            this.H2_StartDate.Location = new System.Drawing.Point(17, 76);
+            this.H2_StartDate.Location = new System.Drawing.Point(17, 70);
             this.H2_StartDate.Name = "H2_StartDate";
             this.H2_StartDate.Size = new System.Drawing.Size(59, 12);
             this.H2_StartDate.TabIndex = 1;
             this.H2_StartDate.Text = "Start Date";
-            this.H2_StartDate.Click += new System.EventHandler(this.label3_Click);
             // 
             // H2_EndDate
             // 
             this.H2_EndDate.AutoSize = true;
-            this.H2_EndDate.Location = new System.Drawing.Point(20, 107);
+            this.H2_EndDate.Location = new System.Drawing.Point(20, 94);
             this.H2_EndDate.Name = "H2_EndDate";
             this.H2_EndDate.Size = new System.Drawing.Size(56, 12);
             this.H2_EndDate.TabIndex = 1;
             this.H2_EndDate.Text = "End Date";
-            this.H2_EndDate.Click += new System.EventHandler(this.label3_Click);
             // 
             // H1_Line
             // 
@@ -157,7 +161,7 @@ namespace SequenceTracker
             this.LineCheckBox.Items.AddRange(new object[] {
             "Line 1",
             "Line 2"});
-            this.LineCheckBox.Location = new System.Drawing.Point(370, 70);
+            this.LineCheckBox.Location = new System.Drawing.Point(370, 64);
             this.LineCheckBox.Name = "LineCheckBox";
             this.LineCheckBox.Size = new System.Drawing.Size(161, 36);
             this.LineCheckBox.TabIndex = 3;
@@ -169,11 +173,10 @@ namespace SequenceTracker
             "Table",
             "Chart Graph",
             "Trend Graph"});
-            this.DisplayOption.Location = new System.Drawing.Point(582, 70);
+            this.DisplayOption.Location = new System.Drawing.Point(582, 64);
             this.DisplayOption.Name = "DisplayOption";
             this.DisplayOption.Size = new System.Drawing.Size(121, 20);
             this.DisplayOption.TabIndex = 4;
-            this.DisplayOption.SelectedIndexChanged += new System.EventHandler(this.DisplayOption_SelectedIndexChanged);
             // 
             // H1_Display_Option
             // 
@@ -183,7 +186,6 @@ namespace SequenceTracker
             this.H1_Display_Option.Size = new System.Drawing.Size(87, 12);
             this.H1_Display_Option.TabIndex = 1;
             this.H1_Display_Option.Text = "Display Option";
-            this.H1_Display_Option.Click += new System.EventHandler(this.label1_Click);
             // 
             // btn_Search
             // 
@@ -197,14 +199,14 @@ namespace SequenceTracker
             // 
             // EndDate
             // 
-            this.EndDate.Location = new System.Drawing.Point(117, 101);
+            this.EndDate.Location = new System.Drawing.Point(117, 88);
             this.EndDate.Name = "EndDate";
             this.EndDate.Size = new System.Drawing.Size(200, 21);
             this.EndDate.TabIndex = 6;
             // 
             // StartDate
             // 
-            this.StartDate.Location = new System.Drawing.Point(117, 70);
+            this.StartDate.Location = new System.Drawing.Point(117, 64);
             this.StartDate.Name = "StartDate";
             this.StartDate.Size = new System.Drawing.Size(200, 21);
             this.StartDate.TabIndex = 7;
@@ -217,8 +219,20 @@ namespace SequenceTracker
             this.Title_Panel.Size = new System.Drawing.Size(903, 32);
             this.Title_Panel.TabIndex = 8;
             // 
+            // AutoUpdate_CheckBox
+            // 
+            this.AutoUpdate_CheckBox.AutoSize = true;
+            this.AutoUpdate_CheckBox.Location = new System.Drawing.Point(117, 115);
+            this.AutoUpdate_CheckBox.Name = "AutoUpdate_CheckBox";
+            this.AutoUpdate_CheckBox.Size = new System.Drawing.Size(92, 16);
+            this.AutoUpdate_CheckBox.TabIndex = 9;
+            this.AutoUpdate_CheckBox.Text = "Auto Update";
+            this.AutoUpdate_CheckBox.UseVisualStyleBackColor = true;
+            this.AutoUpdate_CheckBox.CheckedChanged += new System.EventHandler(this.AutoUpdate_CheckBox_CheckedChanged);
+            // 
             // SearchBar
             // 
+            this.Controls.Add(this.AutoUpdate_CheckBox);
             this.Controls.Add(this.Title_Panel);
             this.Controls.Add(this.StartDate);
             this.Controls.Add(this.EndDate);
@@ -268,24 +282,29 @@ namespace SequenceTracker
 
             Invalidate();
         }
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
 
         private void btn_Search_Click(object sender, EventArgs e)
         {
+            searchRequested = true;
             SearchRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        private void DisplayOption_SelectedIndexChanged(object sender, EventArgs e)
-        {
 
+        private void AutoUpdate_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if(AutoUpdate_CheckBox.Checked == true)
+            {
+                EndDate.Enabled = false;
+                EndDate.Value = DateTime.Now;
+                DataManager.filter.AutoUpdate = true;
+                DataManager.TimerStart();
+            }
+            else
+            {
+                EndDate.Enabled = true;
+                DataManager.filter.AutoUpdate = false;
+                DataManager.TimerPause();
+            }
         }
     }
 }

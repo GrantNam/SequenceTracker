@@ -22,6 +22,7 @@ namespace SequenceTracker
         internal bool LINE_1;
         internal bool LINE_2;
         internal MODEL model;
+        internal bool AutoUpdate;
 
         //UserControl
         //-----------------------------------------
@@ -37,6 +38,7 @@ namespace SequenceTracker
             LINE_2 = false;
 
             model = MODEL.TABLE;
+            AutoUpdate = false;
         }
         //Methods
         //-------------------------------------------
@@ -74,6 +76,18 @@ namespace SequenceTracker
             this.LINE_1 = targetFilter.LINE_1;
             this.LINE_2 = targetFilter.LINE_2;
             this.model = targetFilter.model;
+        }
+        internal bool compareFilter(Filter targetFilter)
+        {
+            if(startDate != targetFilter.startDate ||
+               endDate != targetFilter.endDate ||
+               LINE_1 != targetFilter.LINE_1 ||
+               LINE_2 != targetFilter.LINE_2 ||
+               this.model != targetFilter.model)
+            {
+                return false;
+            }
+            return true;
         }
     }
 

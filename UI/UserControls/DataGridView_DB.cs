@@ -15,7 +15,7 @@ namespace SequenceTracker
 
         //Events
         //-------------------------------------------------------
-        internal event Action<object, SequenceCountResult> RowHeaderClicked;
+        internal event Action<object, int> RowHeaderClicked;
 
         //Event Handlers
         //-------------------------------------------------------
@@ -28,10 +28,15 @@ namespace SequenceTracker
         internal void OnRowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             Console.WriteLine("Header Double Clicked");
-            SequenceCountResult result = (SequenceCountResult)this.Rows[e.RowIndex].Tag;
-            RowHeaderClicked?.Invoke(sender, result);
-        }
+            int ProdDate = Convert.ToInt32(this.Rows[e.RowIndex].Cells["TIMESTAMP"].Value);
 
+            RowHeaderClicked?.Invoke(sender, ProdDate);
+        }
+        protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
+        {
+            base.OnColumnAdded(e);
+            Console.WriteLine(e.ToString());
+        }
         //Subscriptions
         //-------------------------------------------------------
         internal void SubscribeEvents()
@@ -50,11 +55,31 @@ namespace SequenceTracker
         public DataGridView_DB()
         {
             this.DoubleBuffered = true;
+            this.AutoGenerateColumns = true;
         }
         internal DataGridView_DB(MainWindow mainWindow): this()
         {
             this.mainWindow = mainWindow;
             SubscribeEvents();
+        }
+
+        //Methods
+        //---------------------------------------------------------
+        internal int getColumnTotal(string columnName)
+        {
+            if (this.Columns[columnName].ValueType != typeof(int))
+            {
+                throw new InvalidOperationException("Invalid Type Passed");
+            }
+
+            int total = 0;
+
+            for (int i = 0; i < this.Rows.Count; i++)
+            {
+                total += Convert.ToInt32(this.Rows[i].Cells[columnName]);
+            }
+
+            return total;
         }
     }
 }

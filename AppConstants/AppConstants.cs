@@ -31,7 +31,18 @@ namespace SequenceTracker
                 { "TAB_BACKGROUND", ColorTranslator.FromHtml("#506e9b") },
                 { "TAB_FONT", Color.White },
                 { "TAB_BORDER", ColorTranslator.FromHtml("#0a398a") },
-                { "TAB_BORDER_SELECTED", Color.White }
+                { "TAB_BORDER_SELECTED", Color.White },
+            //Graphs
+            //--------------------------------------------------------
+
+            { "LINE_1_CARTYPE_1", ColorTranslator.FromHtml("#0080ff")},
+            { "LINE_1_CARTYPE_2", ColorTranslator.FromHtml("#ffff00")},
+            { "LINE_1_CARTYPE_3", ColorTranslator.FromHtml("#5a4ca5")},
+            { "LINE_1_TOTAL", ColorTranslator.FromHtml("#ab0501")},
+            { "LINE_2_CARTYPE_1", ColorTranslator.FromHtml("#043f77")},
+            { "LINE_2_CARTYPE_2", ColorTranslator.FromHtml("#f7ac07")},
+            { "LINE_2_CARTYPE_3", ColorTranslator.FromHtml("#ff00ff")},
+            { "LINE_2_TOTAL", ColorTranslator.FromHtml("#008140")}
         };
 
         public static readonly Dictionary<string, Pen> Pens = new Dictionary<string, Pen>()
@@ -85,4 +96,13 @@ namespace SequenceTracker
 
     //Enumerators
     //---------------------------------------------------------------------------------------------------
+    internal enum LINE
+    {
+        FINAL_1 = 1,
+        FINAL_2 = 2,
+        TRIM_1 = 3,
+        TRIM_2 = 4,
+        DOOR_1 = 5,
+        DOOR_2 = 6
+    }
 }

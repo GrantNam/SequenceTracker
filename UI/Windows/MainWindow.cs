@@ -17,6 +17,7 @@ namespace SequenceTracker
         //---------------------------------------------
         internal DataManager dataManager;
         internal OracleManager oracleManager;
+        internal EventManager eventManager;
 
         //Fields
         //---------------------------------------------
@@ -25,9 +26,10 @@ namespace SequenceTracker
         //Events
         //---------------------------------------------
         internal event EventHandler DataUpdated;
+        internal event EventHandler AutoDataUpdated;
         internal event EventHandler SearchRequested;
         internal event EventHandler ModeChanged;
-        internal event Action<object, SequenceCountResult> RowHeaderClicked;
+        internal event Action<object, int> RowHeaderClicked;
         internal event EventHandler RowDataUpdated;
 
         //Subscriptions
@@ -38,6 +40,8 @@ namespace SequenceTracker
             searchBar.SearchRequested += OnSearchRequested;
             searchBar.ModeChanged += OnModeChanged;
             dataManager.RowDataUpdated += OnRowDataUpdated;
+            dataManager.AutoDataUpdated += OnAutoDataUpdated;
+            eventManager.RegisterEvents();
         }
         //Event Handlers
         //---------------------------------------------
@@ -45,11 +49,15 @@ namespace SequenceTracker
         {
             RowDataUpdated?.Invoke(sender, e);
         }
-        internal void OnRowHeaderClicked(object sender, SequenceCountResult e)
+        internal void OnRowHeaderClicked(object sender,int PRODDATE)
         {
-            RowHeaderClicked?.Invoke(this, e);
+            RowHeaderClicked?.Invoke(this, PRODDATE);
         }
         internal void OnDataUpdated(object sender, EventArgs e)
+        {
+            DataUpdated?.Invoke(this, EventArgs.Empty);
+        }
+        internal void OnAutoDataUpdated(object sender, EventArgs e)
         {
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -92,12 +100,19 @@ namespace SequenceTracker
         {
             dataManager = new DataManager();
             oracleManager = new OracleManager();
+            eventManager = new EventManager();
 
             dataManager.oracleManager = oracleManager;
             dataManager.mainWindow = this;
+            dataManager.eventManager = eventManager;
 
             oracleManager.dataManager = dataManager;
             oracleManager.mainWindow = this;
+            oracleManager.eventManager = eventManager;
+
+            eventManager.dataManager = dataManager;
+            eventManager.mainWindow = this;
+            eventManager.oracleManager = oracleManager;
 
             AttachControls();
 
