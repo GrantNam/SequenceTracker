@@ -40,7 +40,7 @@ namespace SequenceTracker
         //---------------------------------------------------
         internal void SubscribeEvents()
         {
-            mainWindow.DataUpdated += OnDataUpdated;
+            //mainWindow.DataUpdated += OnDataUpdated;
             mainWindow.ModeChanged += OnModeChanged;
             mainWindow.RowDataUpdated += OnRowDataUpdated;
         }
@@ -97,7 +97,6 @@ namespace SequenceTracker
             }
 
             Redraw();
-            DataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         internal void OnModeChanged(object sender, EventArgs e)

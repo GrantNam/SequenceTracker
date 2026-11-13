@@ -56,7 +56,6 @@ namespace SequenceTracker
             }
 
             Console.WriteLine("Update Count: " + AutoUpdate_Counter++);
-            //dailyDetailWindow.CreateDGV(dataManager);
             UpdateDGV();
         }
         //Methods
@@ -116,87 +115,5 @@ namespace SequenceTracker
                 }
             }
         }
-
-        /*
-        internal void updateTABLE(List<SequenceCount> theSequences, Filter theFilter)
-        {
-            TabPage tabPage = new TabPage();
-            Filter tempFilter = new Filter();
-            DataGridView_DB dgvSeqCount = new DataGridView_DB();
-
-            bool TABLE_Exist = false;
-
-            foreach(TabPage page in mainTab.TabPages)
-            {
-                if (page.Tag is Filter)
-                {   
-                    tempFilter = (Filter) page.Tag;
-                    if(tempFilter.model == MODEL.TABLE)
-                    {
-                        tabPage = page;
-                        TABLE_Exist = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!TABLE_Exist)
-            {
-                throw new Exception("no Data Grid View existed");
-            }
-
-            List<SequenceCountResult> filteredData = dataManager.GetFilteredData(theSequences);
-
-            foreach (Control control in tabPage.Controls)
-            {
-                if(control is DataGridView_DB)
-                {
-                    dgvSeqCount = (DataGridView_DB) control;
-                    break;
-                }
-            }
-
-            int startIndex = 0;
-
-            foreach (DataGridViewRow row in dgvSeqCount.Rows)
-            {
-                SequenceCountResult result = new SequenceCountResult();
-                result = (SequenceCountResult) row.Tag;
-                if(result.Date >= theFilter.startDate)
-                {
-                    startIndex = dgvSeqCount.Rows.IndexOf(row);
-                    break;
-                }
-            }
-
-            for (int i = startIndex; i < dgvSeqCount.Rows.Count; i++)
-            {
-                dgvSeqCount.Rows.RemoveAt(i);
-            }
-
-            foreach (SequenceCountResult item in filteredData)
-            {
-                int rowIndex = dgvSeqCount.Rows.Add
-                (
-                    item.Date.ToString("yyyy-MM-dd"),
-                    item.Line1_CarType_1,
-                    item.Line1_CarType_2,
-                    item.Line1_CarType_3,
-                    item.getLine1Total(),
-                    item.Line2_CarType_1,
-                    item.Line2_CarType_2,
-                    item.Line2_CarType_3,
-                    item.getLine2Total()
-                );
-
-                dgvSeqCount.Rows[rowIndex].Tag = item;
-            }
-
-            tempFilter.endDate = theFilter.endDate;
-
-            tabPage.Name = tempFilter.model.ToString() + " [" + tempFilter.startDate.ToString("yyyy-MM-dd") + " - " + tempFilter.endDate.ToString("yyyy-MM-dd") + "]";
-            tabPage.Text = tempFilter.model.ToString() + " [" + tempFilter.startDate.ToString("yyyy-MM-dd") + " - " + tempFilter.endDate.ToString("yyyy-MM-dd") + "]";
-        }
-        */
     }
 }

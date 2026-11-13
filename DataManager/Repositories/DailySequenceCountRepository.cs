@@ -73,7 +73,7 @@ namespace SequenceTracker
         }
         internal void SubscribeEvents()
         {
-            this.DataUpdated += dataManager.OnDataUpdated;
+            //this.DataUpdated += dataManager.OnDataUpdated;
         }
         //Methods
         //---------------------------------------------------------------------------------------

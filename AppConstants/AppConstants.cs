@@ -27,14 +27,14 @@ namespace SequenceTracker
             { "DISPLAY_PANEL_BACKGROUND", Color.White },
 
 
-                //TABLE
-                { "TAB_BACKGROUND", ColorTranslator.FromHtml("#506e9b") },
-                { "TAB_FONT", Color.White },
-                { "TAB_BORDER", ColorTranslator.FromHtml("#0a398a") },
-                { "TAB_BORDER_SELECTED", Color.White },
+            //TABS
+            { "TAB_BACKGROUND", ColorTranslator.FromHtml("#506e9b") },
+            { "TAB_FONT", Color.White },
+            { "TAB_BORDER", ColorTranslator.FromHtml("#0a398a") },
+            { "TAB_BORDER_SELECTED", Color.White },
+
             //Graphs
             //--------------------------------------------------------
-
             { "LINE_1_CARTYPE_1", ColorTranslator.FromHtml("#0080ff")},
             { "LINE_1_CARTYPE_2", ColorTranslator.FromHtml("#ffff00")},
             { "LINE_1_CARTYPE_3", ColorTranslator.FromHtml("#5a4ca5")},
@@ -60,7 +60,7 @@ namespace SequenceTracker
             { "SEARCH_BAR_H1", new Font(new FontFamily("Arial"), 16, FontStyle.Bold, GraphicsUnit.Pixel)},
             { "SEARCH_BAR_H2", new Font(new FontFamily("Arial"), 14, FontStyle.Regular, GraphicsUnit.Pixel)},
 
-            //TABLE
+            //DGV
             //-------------------------------------------------------------------------------------------------
             { "TABLE_HEADER", new Font(new FontFamily("Arial"), 14, FontStyle.Bold, GraphicsUnit.Pixel)},
             { "TABLE_TAB", new Font(new FontFamily("Arial"), 12, FontStyle.Bold, GraphicsUnit.Pixel)}

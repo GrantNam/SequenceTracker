@@ -36,11 +36,11 @@ namespace SequenceTracker
         //---------------------------------------------
         internal void SubscribeEvents()
         {
-            dataManager.DataUpdated += OnDataUpdated;
-            searchBar.SearchRequested += OnSearchRequested;
+            //dataManager.DataUpdated += OnDataUpdated;
+            //searchBar.SearchRequested += OnSearchRequested;
             searchBar.ModeChanged += OnModeChanged;
             dataManager.RowDataUpdated += OnRowDataUpdated;
-            dataManager.AutoDataUpdated += OnAutoDataUpdated;
+            //dataManager.AutoDataUpdated += OnAutoDataUpdated;
             eventManager.RegisterEvents();
         }
         //Event Handlers
@@ -53,18 +53,22 @@ namespace SequenceTracker
         {
             RowHeaderClicked?.Invoke(this, PRODDATE);
         }
+        /*
         internal void OnDataUpdated(object sender, EventArgs e)
         {
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
+        */
+        /*
         internal void OnAutoDataUpdated(object sender, EventArgs e)
         {
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
+        */
         internal void OnSearchRequested(object sender, EventArgs e)
         {
             SyncFilter();
-            SearchRequested?.Invoke(this, EventArgs.Empty);
+            //SearchRequested?.Invoke(this, EventArgs.Empty);
         }
         internal void OnModeChanged(object sender, EventArgs e)
         {

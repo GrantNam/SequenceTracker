@@ -18,6 +18,8 @@ namespace SequenceTracker
         //------------------------------------------------
         internal event EventHandler AutoDataUpdated;
         internal event EventHandler AutoRowDataUpdated;
+        internal event EventHandler DataUpdated;
+        internal event EventHandler SearchRequested;
         //Event Handlers
         //------------------------------------------------
         internal void OnAutoDataUpdated(object sender, EventArgs e)
@@ -27,6 +29,14 @@ namespace SequenceTracker
         internal void OnAutoRowDataUpdated(object sender, EventArgs e)
         {
             AutoRowDataUpdated?.Invoke(this, EventArgs.Empty);
+        }
+        internal void OnDataUpdated(object sender, EventArgs args)
+        {
+            DataUpdated?.Invoke(this, EventArgs.Empty);
+        }
+        internal void OnSearchRequested(object sender, EventArgs args)
+        {
+            SearchRequested?.Invoke(this, EventArgs.Empty);
         }
         //Constructors
         //------------------------------------------------
@@ -48,12 +58,17 @@ namespace SequenceTracker
         {
             dataManager.DailySequenceCountRepo.AutoDataUpdated += OnAutoDataUpdated;
             dataManager.HourlySequenceCountRepo.AutoDataUpdated += OnAutoRowDataUpdated;
+            dataManager.DailySequenceCountRepo.DataUpdated += OnDataUpdated;
+            mainWindow.searchBar1.SearchRequested += OnSearchRequested;
         }
 
         private void Publish()
-        {
+        {   
             AutoDataUpdated += mainWindow.displayPanel.OnAutoDataUpdated;
             AutoRowDataUpdated += mainWindow.displayPanel.OnAutoRowDataUpdated;
+            DataUpdated += mainWindow.displayPanel.OnDataUpdated;
+            SearchRequested += mainWindow.OnSearchRequested;
+            SearchRequested += dataManager.OnSearchRequested;
         }
     }
 }

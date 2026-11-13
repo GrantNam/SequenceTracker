@@ -40,13 +40,13 @@ namespace SequenceTracker
         
         //Events
         //---------------------------------------------------------------
-        public event EventHandler DataUpdated;
+        //public event EventHandler DataUpdated;
         public event EventHandler AutoDataUpdated;
         public event EventHandler RowDataUpdated;
 
         //Event Handlers
         //---------------------------------------------------------------
-        internal void OnSerchRequested(object sender, EventArgs e)
+        internal void OnSearchRequested(object sender, EventArgs e)
         {
             DailySequenceCountRepo.requestUpdate(DataManager.filter);
         }
@@ -58,10 +58,12 @@ namespace SequenceTracker
             theFilter.startDate = date;
             HourlySequenceCountRepo.requestUpdate(theFilter);
         }
+        /*
         internal void OnDataUpdated(object sender, EventArgs e)
         {
             DataUpdated?.Invoke(this, EventArgs.Empty);
         }
+        */
         internal void OnRowDataUpdated(object sender, EventArgs e)
         {
             RowDataUpdated?.Invoke(this, EventArgs.Empty);
@@ -85,7 +87,7 @@ namespace SequenceTracker
 
         internal void SubscribeEvents()
         {
-            mainWindow.SearchRequested += OnSerchRequested;
+            //mainWindow.SearchRequested += OnSerchRequested;
             mainWindow.RowHeaderClicked += OnRowHeaderClicked;
         }
 
