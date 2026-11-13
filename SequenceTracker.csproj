@@ -96,7 +96,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppConstants\AppConstants.cs" />
-    <Compile Include="Attribute\OracleAttributeHelper.cs" />
     <Compile Include="DataManager\DataManager_AutoUpdate.cs" />
     <Compile Include="DataManager\Repositories\iDataRepository.cs" />
     <Compile Include="DataManager\Repositories\DailySequenceCountRepository.cs" />
@@ -115,17 +114,14 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DataManager\DataManager.cs" />
-    <Compile Include="DataManager\SequenceCountResult.cs" />
     <Compile Include="UI\UserControls\DisplayPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Attribute\OracleAttribute.cs" />
     <Compile Include="DataManager\Filter.cs" />
     <Compile Include="OracleManager\OracleManager.cs" />
     <Compile Include="UI\UserControls\SearchBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DataManager\SequenceCount.cs" />
     <Compile Include="UI\Windows\MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

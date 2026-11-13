@@ -16,10 +16,7 @@ namespace SequenceTracker
     {
         //Fields
         //-------------------------------------------------------------
-        internal ConcurrentQueue<List<SequenceCount>> AutoUpdateBuffer = new ConcurrentQueue<List<SequenceCount>>();
-        internal ConcurrentQueue<Filter> AutoUpdateFilter = new ConcurrentQueue<Filter>();
 
-        internal ConcurrentQueue<List<SequenceCount>> AutoUpdateDailyBuffer = new ConcurrentQueue<List<SequenceCount>>();
 
         //Flags
         //--------------------------------------------------------------
